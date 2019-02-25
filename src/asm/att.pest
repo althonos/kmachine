@@ -1,0 +1,16 @@
+WHITESPACE = _{ " " | "\t" }
+
+char  = @{ ASCII_ALPHANUMERIC | "_" }
+
+ident = @{ ASCII_ALPHA ~ (char*) }
+
+register = _{ "%" ~ ident }
+
+label = { ident ~ ":" }
+
+op = @{ "inc" | "dec" | "jz" }
+arg = { register | ident }
+
+instruction = { op ~ arg ~ ("," ~ arg)* }
+
+program = _{ (NEWLINE? ~ (label | instruction) ~ NEWLINE+)* }
