@@ -1,3 +1,5 @@
+#![allow(unused_macros, unused_imports)]
+
 #[macro_use]
 extern crate pest_derive;
 
@@ -72,6 +74,12 @@ fn main() {
 
         program
             .rule(compile::rules::mov());
+
+        for register in registers.iter() {
+            program
+                .rule(compile::rules::inc_nonzero(register))
+                .rule(compile::rules::inc_zero(register));
+        }
 
 
         // program.rule({
