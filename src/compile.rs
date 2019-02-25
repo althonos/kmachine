@@ -169,7 +169,7 @@ pub mod rules {
         rule.slot(agent!(UNIT(prev[1])), agent!(UNIT(prev[2])));
         rule.slot(
             agent!(UNIT(prev[.], next[.], r{none})),
-            agent!(UNIT(prev[.], next[.], r{@reg})),
+            agent!(UNIT(prev[1], next[2], r{@reg})),
         );
 
         rule
