@@ -40,104 +40,107 @@ macro_rules! agent {
         __agent_impl_sites!(agent, $($rest)*);
         agent
     });
-
-
-    // // A(s{s1})
-    // ($name:ident($site:ident {$($states:tt)*})) => ({
-    //     let mut agent = agent!($name());
-    //     // let mut site = site!($site {$($states)* []});
-    //     // agent.site(site);
-    //     agent
-    // });
-    // // A(s{s1}[a.B])
-    // ($name:ident($site:ident {$($states:tt)*} [$($links:tt)*])) => ({
-    //     let mut agent = agent!($name());
-    //     // let mut site = site!($site {$($states)*} [$($links)*]);
-    //     // agent.site(site);
-    //     agent
-    // });
-
-    // A(s{s1}[a.B], s{s2}[a.C])
-    // ($name:ident( $($rest:tt)* )) => ({
-    //     let mut agent = agent!($name());
-    //     agent!(@agent $name ($($rest)*));
-    //     agent
-    // });
-
-
-    // (@$agent:ident $name:ident($site:ident {$($states:tt)*} [$($links:tt)*], $($rest:tt)*) ) => ({
-    //     // agent.site(site!($site {$($states)*} [$($links)*]));
-    //     agent!(@site $name ($($rest)*) );
-    // });
-
-    // (@$agent:ident $name:ident()) => ();
-
-
-
 }
 
 #[doc(hidden)]
 macro_rules! __agent_impl_sites {
+
     ($agent:ident, $name:ident) => ({
         $agent.site(site!($name));
     });
-    ($agent:ident, $name:ident {$state:ident}) => ({
-        $agent.site(site!($name {$state}));
+    ($agent:ident, @ $name:ident) => ({
+        $agent.site(site!(@ $name));
     });
+
     ($agent:ident, $name:ident [$($link:tt)*]) => ({
         $agent.site(site!($name [$($link)*]));
     });
-    ($agent:ident, $name:ident {$($states:ident),*}) => ({
-        $agent.site(site!($name { $($states),* }));
+    ($agent:ident, @ $name:ident [$($link:tt)*]) => ({
+        $agent.site(site!(@ $name [$($link)*]));
     });
 
-    ($agent:ident, $name:ident {$state:ident}, $($rest:tt)*) => ({
-        $agent.site(site!($name {$state}));
-        __agent_impl_sites!($agent, $($rest)*)
+    ($agent:ident, $name:ident {$($states:tt)*}) => ({
+        $agent.site(site!($name {$($states)*}));
     });
+    ($agent:ident, @ $name:ident {$($states:tt)*}) => ({
+        $agent.site(site!(@ $name {$($states)*}));
+    });
+
     ($agent:ident, $name:ident [$($link:tt)*], $($rest:tt)*) => ({
         $agent.site(site!($name [$($link)*]));
-        __agent_impl_sites!($agent, $($rest)*)
+        __agent_impl_sites!($agent, $($rest)*);
     });
-    ($agent:ident, $name:ident {$($states:ident),*}, $($rest:tt)*) => ({
-        $agent.site(site!($name { $($states),* }));
-        __agent_impl_sites!($agent, $($rest)*)
+    ($agent:ident, @ $name:ident [$($link:tt)*], $($rest:tt)*) => ({
+        $agent.site(site!(@ $name [$($link)*]));
+        __agent_impl_sites!($agent, $($rest)*);
     });
 
+    ($agent:ident, $name:ident {$($states:tt)*}, $($rest:tt)*) => ({
+        $agent.site(site!($name {$($states)*}));
+        __agent_impl_sites!($agent, $($rest)*);
+    });
+    ($agent:ident, @ $name:ident {$($states:tt)*}, $($rest:tt)*) => ({
+        $agent.site(site!(@ $name {$($states)*}));
+        __agent_impl_sites!($agent, $($rest)*);
+    });
 
-    // ($agent:ident, $name:ident {$($state:ident),*} [$($link:tt)*]) =>
+    ($agent:ident, $name:ident {$($states:tt)*} [$($link:tt)*], $($rest:tt)*) => ({
+        $agent.site(site!($name [$($link)*]));
+        __agent_impl_sites!($agent, $($rest)*);
+    });
+    ($agent:ident, @ $name:ident {$($states:tt)*} [$($link:tt)*], $($rest:tt)*) => ({
+        $agent.site(site!(@ $name [$($link)*]));
+        __agent_impl_sites!($agent, $($rest)*);
+    });
 }
-
-
-
-
 
 #[allow(unused)]
 macro_rules! site {
+
     ($name:ident) => ($crate::kappa::Site::new(stringify!($name)));
-    ($name:ident []) => (site!($name));
-    ($name:ident {}) => (site!($name));
-    ($name:ident {} []) => (site!($name));
-    ($name:ident {$state:ident}) => (site!($name {$state} []));
-    ($name:ident {$($state:ident),*}) => ({site!($name {$($state),*} [])});
-    ($name:ident [$($link:tt)*]) => ({
+    (@ $name:ident) => ($crate::kappa::Site::new($name));
+
+    // (@) r{...}
+    ($name:ident {$($states:tt)*}) => ( site!($name { $($states)* } []) );
+    (@ $name:ident {$($states:tt)*}) => ( site!(@ $name { $($states)* } []) );
+
+    // (@) r[...]
+    ($name:ident [$($link:tt)*]) => ( site!($name {} [$($link)*]) );
+    (@ $name:ident [$($link:tt)*]) => ( site!(@ $name {} [$($link)*]) );
+
+    // (@) r{...}[...]
+    ($name:ident {$($states:tt)*} [$($link:tt)*]) => ({
         let mut site = site!($name);
         __site_impl_links!(site [$($link)*]);
+        __site_impl_states!(site {$($states)*});
         site
     });
-    ($name:ident { $($state:ident),* } []) => ({
-        let mut site = site!($name);
-        $(site.state(stringify!($state));)*
-        site
-    });
-    ($name:ident {$($state:ident),*} [$($link:tt)*]) => ({
-        let mut site = site!($name);
-        $(site.state(stringify!($state));)*
+    (@ $name:ident {$($states:tt)*} [$($link:tt)*]) => ({
+        let mut site = site!(@ $name);
         __site_impl_links!(site [$($link)*]);
+        __site_impl_states!(site {$($states)*});
         site
     });
 }
 
+#[doc(hidden)]
+macro_rules! __site_impl_states {
+    ($site:ident {}) => ();
+    ($site:ident {$state:ident}) => ({
+        $site.state(stringify!($state));
+    });
+    ($site:ident {@ $state:ident}) => ({
+        $site.state($state);
+    });
+    ($site:ident {$state:ident, $($rest:tt)*}) => ({
+        __site_impl_states!($site {$state});
+        __site_impl_states!($site {$($rest)*});
+    });
+    ($site:ident {@ $state:ident, $($rest:tt)*}) => ({
+        __site_impl_states!($site {@ $state});
+        __site_impl_states!($site {$($rest)*});
+    });
+}
 
 #[doc(hidden)]
 macro_rules! __site_impl_links {
@@ -171,17 +174,24 @@ macro_rules! __site_impl_links {
     });
 }
 
-
 #[allow(unused)]
 macro_rules! link {
-    (.) => {$crate::kappa::Link::Free};
-    (#) => {$crate::kappa::Link::Unknown};
-    (_) => {$crate::kappa::Link::Bound};
+    (.) => {
+        $crate::kappa::Link::Free
+    };
+    (#) => {
+        $crate::kappa::Link::Unknown
+    };
+    (_) => {
+        $crate::kappa::Link::Bound
+    };
     ($site:ident . $agent:ident) => {
         $crate::kappa::Link::BoundTo {
             agent: stringify!($agent).to_string(),
             site: stringify!($site).to_string(),
         }
     };
-    ($site:expr) => {$crate::kappa::Link::Numbered($site)};
+    ($site:expr) => {
+        $crate::kappa::Link::Numbered($site)
+    };
 }
