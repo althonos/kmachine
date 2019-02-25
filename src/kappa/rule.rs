@@ -32,7 +32,7 @@ impl Rule {
         rule
     }
 
-    pub fn agent(&mut self, left: Agent, right: Agent) -> &mut Self {
+    pub fn slot(&mut self, left: Agent, right: Agent) -> &mut Self {
         self.left.push(left);
         self.right.push(right);
         self

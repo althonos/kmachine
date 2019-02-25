@@ -15,69 +15,40 @@ pub mod agents {
     where
         I: IntoIterator<Item=&'a &'a Register>,
     {
-        let mut agent = Agent::new("UNIT");
+        let mut agent = agent!(UNIT());
 
-        let mut site_prev = Site::new("prev");
-        site_prev.linkable("UNIT", "next");
-        let mut site_r = Site::new("r");
+        let mut site_prev = site!(prev[next.UNIT]);
+        let mut site_r = site!(r{none});
         for register in registers.into_iter() {
-            site_prev.linkable("MACHINE", register.name.as_str());
             site_r.state(register.name.as_str());
+            site_prev.linkable("MACHINE", register.name.as_str());
         }
+
         agent.site(site_prev);
         agent.site(site_r);
-
-        let mut site_next = Site::new("next");
-        site_next.linkable("UNIT", "prev");
-        agent.site(site_next);
-
+        agent.site(site!(next[prev.UNIT]));
         agent
     }
 
     pub fn prog() -> Agent {
-        let mut site;
-        let mut agent = Agent::new("PROG");
-
-        site = Site::new("prev");
-        site.linkable("PROG", "next");
-        agent.site(site);
-
-        site = Site::new("next");
-        site.linkable("PROG", "prev");
-        agent.site(site);
-
-        site = Site::new("cm");
-        site.linkable("MACHINE", "ip");
-        agent.site(site);
-
-        // NB: add more commands here
-        site = Site::new("ins");
-        site.linkable("INS", "prog");
-        site.linkable("DEC", "prog");
-        site.linkable("JZ", "prog");
-        agent.site(site);
-
-        agent
+        agent!(
+            PROG(
+                prev[next.PROG],
+                next[prev.PROG],
+                cm[ip.MACHINE],
+                ins[prog.INC, prog.DEC, prog.JZ]
+            )
+        )
     }
 
     pub fn machine<'a, I>(registers: I) -> Agent
     where
         I: IntoIterator<Item=&'a &'a Register>,
     {
+        // Agent with baseline sites
+        let mut agent = agent!(MACHINE(ip[cm.PROG], state{run, mov, jmp}));
+        // Add one site for each register
         let mut site;
-        let mut agent = Agent::new("MACHINE");
-
-        site = Site::new("ip");
-        site.linkable("PROG", "cm");
-        agent.site(site);
-
-        // NB: add more commands here
-        site = Site::new("state");
-        site.state("run");
-        site.state("mov");
-        site.state("jmp");
-        agent.site(site);
-
         for register in registers.into_iter() {
             site = Site::new(register.name.as_str());
             site.linkable("UNIT", "prev");
@@ -92,13 +63,9 @@ pub mod agents {
         I: IntoIterator<Item=&'a &'a Register>,
     {
         let mut site;
-        let mut agent = Agent::new("INC");
+        let mut agent = agent!(INC(prog[ins.PROG]));
 
-        site = Site::new("prog");
-        site.linkable("PROG", "ins");
-        agent.site(site);
-
-        site = Site::new("r");
+        site = site!(r);
         for register in registers.into_iter() {
             site.state(register.name.to_string());
         }
@@ -112,13 +79,9 @@ pub mod agents {
         I: IntoIterator<Item=&'a &'a Register>,
     {
         let mut site;
-        let mut agent = Agent::new("DEC");
+        let mut agent = agent!(DEC(prog[ins.PROG]));
 
-        site = Site::new("prog");
-        site.linkable("PROG", "ins");
-        agent.site(site);
-
-        site = Site::new("r");
+        site = site!(r);
         for register in registers.into_iter() {
             site.state(register.name.to_string());
         }
@@ -133,19 +96,15 @@ pub mod agents {
         L: IntoIterator<Item=&'a &'a Label>,
     {
         let mut site;
-        let mut agent = Agent::new("JZ");
+        let mut agent = agent!(JZ(prog[ins.PROG]));
 
-        site = Site::new("prog");
-        site.linkable("PROG", "ins");
-        agent.site(site);
-
-        site = Site::new("r");
+        site = site!(r);
         for register in registers.into_iter() {
             site.state(register.name.to_string());
         }
         agent.site(site);
 
-        site = Site::new("l");
+        site = site!(l);
         for label in labels.into_iter() {
             site.state(label.name.to_string());
         }
@@ -162,62 +121,92 @@ pub mod rules {
     use super::*;
 
     pub fn mov() -> Rule {
-
-        let mut site;
-        let mut left;
-        let mut right;
-
         let mut rule = Rule::with_name("move", 1.0);
+        rule.slot(
+            agent!(MACHINE(ip[0], state{mov})),
+            agent!(MACHINE(ip[0], state{run}))
+        );
+        rule.slot(
+            agent!(PROG(cm[0], next[1])),
+            agent!(PROG(cm[.], next[1]))
+        );
+        rule.slot(
+            agent!(PROG(cm[.], prev[1])),
+            agent!(PROG(cm[0], prev[1]))
+        );
+        rule
+    }
 
-        left = Agent::new("MACHINE");
-        site = Site::new("ip");
-        site.link(Link::Numbered(0));
-        left.site(site);
-        site = Site::new("state");
-        site.state("move");
-        left.site(site);
-        right = Agent::new("MACHINE");
-        site = Site::new("ip");
-        site.link(Link::Numbered(2));
-        right.site(site);
-        site = Site::new("state");
-        site.state("run");
-        right.site(site);
-        rule.agent(left, right);
+    pub fn inc_nonzero(register: &Register) -> Rule {
+        let mut rule = Rule::with_name(
+            format!("inc({0}) | {0} != 0", register.name.as_str()).as_str(),
+            1.0
+        );
 
-        left = Agent::new("PROG");
-        site = Site::new("cm");
-        site.link(Link::Numbered(0));
-        left.site(site);
-        site = Site::new("next");
-        site.link(Link::Numbered(1));
-        left.site(site);
-        right = Agent::new("PROG");
-        site = Site::new("cm");
-        site.link(Link::Free);
-        right.site(site);
-        site = Site::new("next");
-        site.link(Link::Numbered(1));
-        right.site(site);
-        rule.agent(left, right);
+        let mut machine_left = agent!(MACHINE(ip[0], state{run}));
+        let mut machine_right = agent!(MACHINE(ip[0], state{mov}));
+        let mut site_register = Site::new(register.name.as_str());
+        site_register.link(link!(1));
+        machine_left.site(site_register.clone());
+        machine_right.site(site_register);
+        rule.slot(machine_left, machine_right);
 
-        left = Agent::new("PROG");
-        site = Site::new("prev");
-        site.link(Link::Numbered(1));
-        left.site(site);
-        site = Site::new("cm");
-        site.link(Link::Free);
-        left.site(site);
-        right = Agent::new("PROG");
-        site = Site::new("prev");
-        site.link(Link::Numbered(1));
-        right.site(site);
-        site = Site::new("cm");
-        site.link(Link::Numbered(2));
-        right.site(site);
-        rule.agent(left, right);
+        let mut inc = agent!(INC(prog[3]));
+        let mut state_register = site!(r);
+        state_register.state(register.name.as_str());
+        inc.site(state_register.clone());
+        rule.slot(inc.clone(), inc);
+
+        rule.slot(
+            agent!(PROG(cm[0], ins[3])),
+            agent!(PROG(cm[0], ins[3])),
+        );
+
+        rule.slot(
+            agent!(UNIT(prev[1])),
+            agent!(UNIT(prev[2]))
+        );
+
+        let mut new_unit = agent!(UNIT(prev[1], next[2]));
+        new_unit.site(state_register);
+        rule.slot(agent!(UNIT(prev[.], next[.], r{none})), new_unit);
 
         rule
-
     }
+
+    pub fn inc_zero(register: &Register) -> Rule {
+        let mut rule = Rule::with_name(
+            format!("inc({0}) | {0} == 0", register.name.as_str()).as_str(),
+            1.0
+        );
+
+        let mut machine_left = agent!(MACHINE(ip[0], state{run}));
+        let mut machine_right = agent!(MACHINE(ip[0], state{mov}));
+
+        let mut register_left = Site::new(register.name.as_str());
+        let mut register_right = register_left.clone();
+        register_left.link(link!(.));
+        register_right.link(link!(1));
+        machine_left.site(register_left);
+        machine_right.site(register_right);
+        rule.slot(machine_left, machine_right);
+
+        let mut inc = agent!(INC(prog[3]));
+        let mut state_register = site!(r);
+        state_register.state(register.name.as_str());
+        inc.site(state_register.clone());
+        rule.slot(inc.clone(), inc);
+
+        rule.slot(
+            agent!(PROG(cm[0], ins[3])),
+            agent!(PROG(cm[0], ins[3])),
+        );
+
+        let mut new_unit = agent!(UNIT(prev[1], next[.]));
+        new_unit.site(state_register);
+        rule.slot(agent!(UNIT(prev[.], next[.], r{none})), new_unit);
+
+        rule
+    }
+
 }
