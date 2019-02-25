@@ -186,8 +186,51 @@ pub mod rules {
             agent!(MACHINE(ip[0], state{run}, @reg[.])),
             agent!(MACHINE(ip[0], state{mov}, @reg[.])),
         );
+        rule.slot(agent!(DEC(prog[2], r{@reg})), agent!(DEC(prog[2], r{@reg})));
+        rule.slot(agent!(PROG(cm[0], ins[2])), agent!(PROG(cm[0], ins[2])));
+
+        rule
+    }
+
+    pub fn dec_one(register: &Register) -> Rule {
+        let reg = register.name.as_str();
+        let mut rule = Rule::with_name(
+            format!("dec({0}) | {0} == 1", register.name.as_str()).as_str(),
+            1.0,
+        );
+
+        rule.slot(
+            agent!(MACHINE(ip[0], state{run}, @reg[1])),
+            agent!(MACHINE(ip[0], state{mov}, @reg[.])),
+        );
         rule.slot(agent!(DEC(prog[3], r{@reg})), agent!(DEC(prog[3], r{@reg})));
         rule.slot(agent!(PROG(cm[0], ins[3])), agent!(PROG(cm[0], ins[3])));
+        rule.slot(
+            agent!(UNIT(prev[1], next[.], r{@reg})),
+            agent!(UNIT(prev[.], next[.], r{none})),
+        );
+
+        rule
+    }
+
+    pub fn dec_more(register: &Register) -> Rule {
+        let reg = register.name.as_str();
+        let mut rule = Rule::with_name(
+            format!("dec({0}) | {0} > 1", register.name.as_str()).as_str(),
+            1.0,
+        );
+
+        rule.slot(
+            agent!(MACHINE(ip[0], state{run}, @reg[1])),
+            agent!(MACHINE(ip[0], state{mov}, @reg[2])),
+        );
+        rule.slot(agent!(DEC(prog[3], r{@reg})), agent!(DEC(prog[3], r{@reg})));
+        rule.slot(agent!(PROG(cm[0], ins[3])), agent!(PROG(cm[0], ins[3])));
+        rule.slot(
+            agent!(UNIT(prev[1], next[2], r{@reg})),
+            agent!(UNIT(prev[.], next[.], r{none})),
+        );
+        rule.slot(agent!(UNIT(prev[2])), agent!(UNIT(prev[2])));
 
         rule
     }

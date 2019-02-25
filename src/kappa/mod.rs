@@ -12,8 +12,8 @@ use std::fmt::Result as FmtResult;
 use std::fmt::Write;
 
 pub use self::agent::Agent;
-pub use self::agent::Site;
 pub use self::agent::Link;
+pub use self::agent::Site;
 pub use self::rule::Rule;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -64,8 +64,6 @@ impl Display for KappaProgram {
         Ok(())
     }
 }
-
-
 
 // #[derive(Clone, Debug, Eq, PartialEq)]
 // pub struct Var {

@@ -40,8 +40,6 @@ impl Display for Agent {
     }
 }
 
-
-
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Site {
     name: String,
@@ -68,7 +66,10 @@ impl Site {
         A: Into<String>,
         S: Into<String>,
     {
-        self.links.insert(Link::BoundTo { agent: agent.into(), site: site.into()});
+        self.links.insert(Link::BoundTo {
+            agent: agent.into(),
+            site: site.into(),
+        });
         self
     }
 
@@ -112,17 +113,13 @@ impl Display for Site {
     }
 }
 
-
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub enum Link{
+pub enum Link {
     Unknown,
     Free,
     Numbered(usize),
     Bound,
-    BoundTo {
-        agent: String,
-        site: String,
-    }
+    BoundTo { agent: String, site: String },
 }
 
 impl Display for Link {

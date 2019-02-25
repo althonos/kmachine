@@ -28,7 +28,6 @@ use self::kappa::Site;
 
 fn main() {
     for filename in std::env::args().skip(1) {
-
         let mut file = std::fs::File::open(&filename).unwrap();
         let mut program = String::new();
         file.read_to_string(&mut program).unwrap();
@@ -58,38 +57,37 @@ fn main() {
             })
             .collect();
 
-        // Compile Kappa program
-        let mut program = KappaProgram::new();
-        program
-            // counter units
-            .agent(compile::agents::unit(&registers))
-            // machine
-            .agent(compile::agents::machine(&registers))
-            // instructions
-            .agent(compile::agents::prog())
-            // pseudo-operands
-            .agent(compile::agents::inc(&registers))
-            .agent(compile::agents::dec(&registers))
-            .agent(compile::agents::jz(&registers, &labels));
+        // Compile the CM program into a Kappa source
+        let program = {
+            let mut program = KappaProgram::new();
 
-        program
-            .rule(compile::rules::mov());
-
-        for register in registers.iter() {
+            // Build agents
             program
-                .rule(compile::rules::inc_nonzero(register))
-                .rule(compile::rules::inc_zero(register));
-        }
+                // counter units
+                .agent(compile::agents::unit(&registers))
+                // machine
+                .agent(compile::agents::machine(&registers))
+                // instructions
+                .agent(compile::agents::prog())
+                // pseudo-operands
+                .agent(compile::agents::inc(&registers))
+                .agent(compile::agents::dec(&registers))
+                .agent(compile::agents::jz(&registers, &labels));
 
+            // Build static rules
+            program.rule(compile::rules::mov());
+            for register in registers.iter() {
+                program
+                    .rule(compile::rules::inc_nonzero(register))
+                    .rule(compile::rules::inc_zero(register))
+                    .rule(compile::rules::dec_zero(register))
+                    .rule(compile::rules::dec_one(register))
+                    .rule(compile::rules::dec_more(register));
+                for label in labels.iter() {}
+            }
 
-        // program.rule({
-        //     let mut mov = Rule::with_name("move", 1);
-        //     mov.agent(
-        //
-        //     )
-        // });
-
-
+            program
+        };
 
         println!("// {}\n{:#}", filename, program);
     }

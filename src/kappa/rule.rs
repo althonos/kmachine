@@ -19,7 +19,7 @@ impl Rule {
             name: None,
             left: Vec::new(),
             right: Vec::new(),
-            rate
+            rate,
         }
     }
 
@@ -39,16 +39,14 @@ impl Rule {
     }
 }
 
-
 impl Display for Rule {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
-
         let mut agents;
 
         // write rule name if any
         if let Some(ref name) = self.name {
             write!(f, "'{}'", name)?;
-            f.write_char(if f.alternate() {'\n'} else {' '})?;
+            f.write_char(if f.alternate() { '\n' } else { ' ' })?;
         }
 
         // write left slots
@@ -62,12 +60,12 @@ impl Display for Rule {
             write!(f, "{}", agent)?;
             // Add separator if there are still some agents left
             if agents.peek().is_some() {
-                f.write_str(if f.alternate() {",\n"} else {", "})?;
+                f.write_str(if f.alternate() { ",\n" } else { ", " })?;
             }
         }
 
         // Add reaction arrow
-        f.write_str(if f.alternate() {"\n->\n"} else {" -> "})?;
+        f.write_str(if f.alternate() { "\n->\n" } else { " -> " })?;
 
         // write right slots
         agents = self.right.iter().peekable();
@@ -80,12 +78,12 @@ impl Display for Rule {
             write!(f, "{}", agent)?;
             // Add separator if there are still some agents left
             if agents.peek().is_some() {
-                f.write_str(if f.alternate() {",\n"} else {", "})?;
+                f.write_str(if f.alternate() { ",\n" } else { ", " })?;
             }
         }
 
         // write rate
-        f.write_char(if f.alternate() {'\n'} else {' '})?;
+        f.write_char(if f.alternate() { '\n' } else { ' ' })?;
         write!(f, "@ {}\n", self.rate)
     }
 }
