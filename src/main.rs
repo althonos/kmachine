@@ -91,6 +91,6 @@ fn main() {
 
 
 
-        println!("// {}\n{}", filename, program);
+        println!("// {}\n{:#}", filename, program);
     }
 }

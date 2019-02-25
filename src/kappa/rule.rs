@@ -41,38 +41,51 @@ impl Rule {
 
 
 impl Display for Rule {
-
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
 
         let mut agents;
 
+        // write rule name if any
         if let Some(ref name) = self.name {
-            write!(f, "'{}' ", name)?;
+            write!(f, "'{}'", name)?;
+            f.write_char(if f.alternate() {'\n'} else {' '})?;
         }
 
+        // write left slots
         agents = self.left.iter().peekable();
         while let Some(agent) = agents.next() {
-            agent.fmt(f)?;
+            // Add indendation if pretty-printing
+            if f.alternate() {
+                f.write_str("    ")?;
+            }
+            // Write the agent in compact mode even if pretty-printing
+            write!(f, "{}", agent)?;
+            // Add separator if there are still some agents left
             if agents.peek().is_some() {
-                f.write_str(", ")?;
+                f.write_str(if f.alternate() {",\n"} else {", "})?;
             }
         }
 
-        f.write_str(" -> ")?;
+        // Add reaction arrow
+        f.write_str(if f.alternate() {"\n->\n"} else {" -> "})?;
 
+        // write right slots
         agents = self.right.iter().peekable();
         while let Some(agent) = agents.next() {
-            agent.fmt(f)?;
+            // Add indendation if pretty-printing
+            if f.alternate() {
+                f.write_str("    ")?;
+            }
+            // Write the agent in compact mode even if pretty-printing
+            write!(f, "{}", agent)?;
+            // Add separator if there are still some agents left
             if agents.peek().is_some() {
-                f.write_str(", ")?;
+                f.write_str(if f.alternate() {",\n"} else {", "})?;
             }
         }
 
-        write!(f, " @ {}\n", self.rate)
-
-
-
+        // write rate
+        f.write_char(if f.alternate() {'\n'} else {' '})?;
+        write!(f, "@ {}\n", self.rate)
     }
-
-
 }

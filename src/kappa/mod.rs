@@ -46,12 +46,19 @@ impl KappaProgram {
 
 impl Display for KappaProgram {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
-        /*FIXME*/
+        // write agents
         for agent in self.agents.iter() {
-            write!(f, "%agent: {}\n", agent)?;
+            f.write_str("%agent: ")?;
+            agent.fmt(f)?;
+            f.write_char('\n')?;
         }
+
+        // write rules
         for rule in self.rules.iter() {
-            write!(f, "{}", rule)?;
+            if f.alternate() {
+                f.write_char('\n')?;
+            }
+            rule.fmt(f)?;
         }
 
         Ok(())
