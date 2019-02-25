@@ -201,6 +201,22 @@ pub mod rules {
         right.site(site);
         rule.agent(left, right);
 
+        left = Agent::new("PROG");
+        site = Site::new("prev");
+        site.link(Link::Numbered(1));
+        left.site(site);
+        site = Site::new("cm");
+        site.link(Link::Free);
+        left.site(site);
+        right = Agent::new("PROG");
+        site = Site::new("prev");
+        site.link(Link::Numbered(1));
+        right.site(site);
+        site = Site::new("cm");
+        site.link(Link::Numbered(2));
+        right.site(site);
+        rule.agent(left, right);
+
         rule
 
     }
