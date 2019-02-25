@@ -1,9 +1,11 @@
 #[macro_use]
 extern crate pest_derive;
 
+extern crate indexmap;
 extern crate pest;
 
 pub mod asm;
+pub mod kappa;
 
 use std::collections::HashSet;
 use std::io::Read;
@@ -14,6 +16,10 @@ use self::asm::Label;
 use self::asm::Line;
 use self::asm::Op;
 use self::asm::Register;
+
+use self::kappa::Agent;
+use self::kappa::KappaProgram;
+use self::kappa::Site;
 
 fn main() {
     for filename in std::env::args().skip(1) {
@@ -47,5 +53,40 @@ fn main() {
                 Line::OpLine(_) => None,
             })
             .collect();
+
+        // UNIT agent
+        let mut agent_unit = Agent::new("UNIT");
+        agent_unit
+            .site({
+                let mut site = Site::new("prev");
+                site.binding("UNIT", "next");
+                for register in registers.iter() {
+                    site.binding("MACHINE", register.name.as_str());
+                }
+                site
+            })
+            .site({
+                let mut site = Site::new("next");
+                site.binding("UNIT", "prev");
+                site
+            })
+            .site({
+                let mut site = Site::new("r");
+                site.state("_none");
+                for ref register in registers {
+                    site.state(register.name.as_str());
+                }
+                site
+            });
+
+        // MACHINE agent
+        let mut agent_machine = Agent::new("MACHINE");
+
+
+        let mut kappa = KappaProgram::new().agent(agent_unit);
+
+        // println!("
+        //     %mod: |UNIT(prev[.])| = 0 do $ADD 1 UNIT();
+        // ")
     }
 }
