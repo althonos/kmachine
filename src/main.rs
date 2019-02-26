@@ -66,7 +66,7 @@ fn main() {
                 // counter units
                 .agent(compile::agents::unit(&registers))
                 // machine
-                .agent(compile::agents::machine(&registers))
+                .agent(compile::agents::machine(&registers, &labels))
                 // instructions
                 .agent(compile::agents::prog())
                 // pseudo-operands
@@ -78,12 +78,15 @@ fn main() {
             program.rule(compile::rules::mov());
             for register in registers.iter() {
                 program
-                    .rule(compile::rules::inc_nonzero(register))
-                    .rule(compile::rules::inc_zero(register))
-                    .rule(compile::rules::dec_zero(register))
-                    .rule(compile::rules::dec_one(register))
-                    .rule(compile::rules::dec_more(register));
-                for label in labels.iter() {}
+                    .rule(compile::rules::inc_nonzero(&register.name))
+                    .rule(compile::rules::inc_zero(&register.name))
+                    .rule(compile::rules::dec_zero(&register.name))
+                    .rule(compile::rules::dec_one(&register.name))
+                    .rule(compile::rules::dec_more(&register.name))
+                    .rule(compile::rules::jz_nonzero(&register.name));
+                for label in labels.iter() {
+                    program.rule(compile::rules::jz_zero(&register.name, &label.name));
+                }
             }
 
             program

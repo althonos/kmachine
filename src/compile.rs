@@ -18,7 +18,7 @@ pub mod agents {
         let mut agent = agent!(UNIT());
 
         let mut site_prev = site!(prev[next.UNIT]);
-        let mut site_r = site!(r { none });
+        let mut site_r = site!(r { _none });
         for register in registers.into_iter() {
             site_r.state(register.name.as_str());
             site_prev.linkable("MACHINE", register.name.as_str());
@@ -41,19 +41,26 @@ pub mod agents {
         )
     }
 
-    pub fn machine<'a, I>(registers: I) -> Agent
+    pub fn machine<'a, I, L>(registers: I, labels: L) -> Agent
     where
         I: IntoIterator<Item = &'a &'a Register>,
+        L: IntoIterator<Item = &'a &'a Label>,
     {
         // Agent with baseline sites
+        let mut site;
         let mut agent = agent!(MACHINE(ip[cm.PROG], state { run, mov, jmp }));
         // Add one site for each register
-        let mut site;
         for register in registers.into_iter() {
             site = Site::new(register.name.as_str());
             site.linkable("UNIT", "prev");
             agent.site(site);
         }
+        // Add one state for each
+        site = site!(target { _none });
+        for label in labels.into_iter() {
+            site.state(label.name.as_str());
+        }
+        agent.site(site);
 
         agent
     }
@@ -126,119 +133,144 @@ pub mod rules {
     use super::*;
 
     pub fn mov() -> Rule {
-        let mut rule = Rule::with_name("move", 1.0);
-
-        rule.slot(
-            agent!(MACHINE(ip[0], state { mov })),
-            agent!(MACHINE(ip[0], state { run })),
-        );
-        rule.slot(agent!(PROG(cm[0], next[1])), agent!(PROG(cm[.], next[1])));
-        rule.slot(agent!(PROG(cm[.], prev[1])), agent!(PROG(cm[0], prev[1])));
-
-        rule
+        rule!(
+            "mov" {
+                MACHINE(ip[0], state{mov}),
+                PROG(cm[0], next[1]),
+                PROG(cm[.], prev[1]),
+            } => {
+                MACHINE(ip[0], state{run}),
+                PROG(cm[.], next[1]),
+                PROG(cm[0], prev[1]),
+            } @ 1.0
+        )
     }
 
-    pub fn inc_zero(register: &Register) -> Rule {
-        let reg = register.name.as_str();
-        let mut rule = Rule::with_name(
-            format!("inc({0}) | {0} == 0", register.name.as_str()).as_str(),
-            1.0,
-        );
+    // TODO: bind
+    // pub fn bind() -> Rule {}
 
-        rule.slot(
-            agent!(MACHINE(ip[0], state{run}, ?reg[.])),
-            agent!(MACHINE(ip[0], state{mov}, ?reg[1])),
-        );
-        rule.slot(agent!(INC(prog[3], r{?reg})), agent!(INC(prog[3], r{?reg})));
-        rule.slot(agent!(PROG(cm[0], ins[3])), agent!(PROG(cm[0], ins[3])));
-        rule.slot(
-            agent!(UNIT(prev[.], next[.], r{none})),
-            agent!(UNIT(prev[1], next[.], r{?reg})),
-        );
+    pub fn inc_zero(reg: &str) -> Rule {
+        let name = format!("inc({0}) | {0} == 0", reg);
 
-        rule
+        rule!(
+            ?name {
+                MACHINE(ip[0], state{run}, ?reg[.]),
+                PROG(cm[0], ins[1]),
+                INC(prog[1], r{?reg}),
+                UNIT(prev[.], next[.], r{_none}),
+            } => {
+                MACHINE(ip[0], state{mov}, ?reg[2]),
+                PROG(cm[0], ins[1]),
+                INC(prog[1], r{?reg}),
+                UNIT(prev[2], next[.], r{?reg}),
+            } @ 1.0
+        )
     }
 
-    pub fn inc_nonzero(register: &Register) -> Rule {
-        let reg = register.name.as_str();
-        let mut rule = Rule::with_name(
-            format!("inc({0}) | {0} != 0", register.name.as_str()).as_str(),
-            1.0,
-        );
+    pub fn inc_nonzero(reg: &str) -> Rule {
+        let name = format!("inc({0}) | {0} != 0", reg);
 
-        rule.slot(
-            agent!(MACHINE(ip[0], state{run}, ?reg[1])),
-            agent!(MACHINE(ip[0], state{mov}, ?reg[1])),
-        );
-        rule.slot(agent!(INC(prog[3], r{?reg})), agent!(INC(prog[3], r{?reg})));
-        rule.slot(agent!(PROG(cm[0], ins[3])), agent!(PROG(cm[0], ins[3])));
-        rule.slot(agent!(UNIT(prev[1])), agent!(UNIT(prev[2])));
-        rule.slot(
-            agent!(UNIT(prev[.], next[.], r{none})),
-            agent!(UNIT(prev[1], next[2], r{?reg})),
-        );
-
-        rule
+        rule!(
+            ?name {
+                MACHINE(ip[0], state{run}, ?reg[2]),
+                PROG(cm[0], ins[1]),
+                INC(prog[1], r{?reg}),
+                UNIT(prev[2], next[.]),
+                UNIT(prev[.], next[.], r{_none}),
+            } => {
+                MACHINE(ip[0], state{mov}, ?reg[2]),
+                PROG(cm[0], ins[1]),
+                INC(prog[1], r{?reg}),
+                UNIT(prev[2], next[3]),
+                UNIT(prev[3], next[.], r{?reg}),
+            } @ 1.0
+        )
     }
 
-    pub fn dec_zero(register: &Register) -> Rule {
-        let reg = register.name.as_str();
-        let mut rule = Rule::with_name(
-            format!("dec({0}) | {0} == 0", register.name.as_str()).as_str(),
-            1.0,
-        );
+    pub fn dec_zero(reg: &str) -> Rule {
+        let name = format!("dec({0}) | {0} == 0", reg);
 
-        rule.slot(
-            agent!(MACHINE(ip[0], state{run}, ?reg[.])),
-            agent!(MACHINE(ip[0], state{mov}, ?reg[.])),
-        );
-        rule.slot(agent!(DEC(prog[2], r{?reg})), agent!(DEC(prog[2], r{?reg})));
-        rule.slot(agent!(PROG(cm[0], ins[2])), agent!(PROG(cm[0], ins[2])));
-
-        rule
+        rule!(
+            ?name {
+                MACHINE(ip[0], state{run}, ?reg[.]),
+                PROG(cm[0], ins[1]),
+                DEC(prog[1], r{?reg})
+            } => {
+                MACHINE(ip[0], state{mov}, ?reg[.]),
+                PROG(cm[0], ins[1]),
+                DEC(prog[1], r{?reg})
+            } @ 1.0
+        )
     }
 
-    pub fn dec_one(register: &Register) -> Rule {
-        let reg = register.name.as_str();
-        let mut rule = Rule::with_name(
-            format!("dec({0}) | {0} == 1", register.name.as_str()).as_str(),
-            1.0,
-        );
+    pub fn dec_one(reg: &str) -> Rule {
+        let name = format!("dec({0}) | {0} == 1", reg);
 
-        rule.slot(
-            agent!(MACHINE(ip[0], state{run}, ?reg[1])),
-            agent!(MACHINE(ip[0], state{mov}, ?reg[.])),
-        );
-        rule.slot(agent!(DEC(prog[3], r{?reg})), agent!(DEC(prog[3], r{?reg})));
-        rule.slot(agent!(PROG(cm[0], ins[3])), agent!(PROG(cm[0], ins[3])));
-        rule.slot(
-            agent!(UNIT(prev[1], next[.], r{?reg})),
-            agent!(UNIT(prev[.], next[.], r{none})),
-        );
-
-        rule
+        rule!(
+            ?name {
+                MACHINE(ip[0], state{run}, ?reg[2]),
+                PROG(cm[0], ins[1]),
+                DEC(prog[1], r{?reg}),
+                UNIT(prev[2], next[.], r{?reg}),
+            } => {
+                MACHINE(ip[0], state{mov}, ?reg[.]),
+                PROG(cm[0], ins[1]),
+                DEC(prog[1], r{?reg}),
+                UNIT(prev[.], next[.], r{_none}),
+            } @ 1.0
+        )
     }
 
-    pub fn dec_more(register: &Register) -> Rule {
-        let reg = register.name.as_str();
-        let mut rule = Rule::with_name(
-            format!("dec({0}) | {0} > 1", register.name.as_str()).as_str(),
-            1.0,
-        );
+    pub fn dec_more(reg: &str) -> Rule {
+        let name = format!("dec({0}) | {0} >= 2", reg);
 
-        rule.slot(
-            agent!(MACHINE(ip[0], state{run}, ?reg[1])),
-            agent!(MACHINE(ip[0], state{mov}, ?reg[2])),
-        );
-        rule.slot(agent!(DEC(prog[3], r{?reg})), agent!(DEC(prog[3], r{?reg})));
-        rule.slot(agent!(PROG(cm[0], ins[3])), agent!(PROG(cm[0], ins[3])));
-        rule.slot(
-            agent!(UNIT(prev[1], next[2], r{?reg})),
-            agent!(UNIT(prev[.], next[.], r{none})),
-        );
-        rule.slot(agent!(UNIT(prev[2])), agent!(UNIT(prev[2])));
+        rule!(
+            ?name {
+                MACHINE(ip[0], state{run}, ?reg[2]),
+                PROG(cm[0], ins[1]),
+                DEC(prog[1], r{?reg}),
+                UNIT(prev[2], next[3], r{?reg}),
+                UNIT(prev[3]),
+            } => {
+                MACHINE(ip[0], state{mov}, ?reg[3]),
+                PROG(cm[0], ins[1]),
+                DEC(prog[1], r{?reg}),
+                UNIT(prev[.], next[.], r{_none}),
+                UNIT(prev[3]),
+            } @ 1.0
+        )
+    }
 
-        rule
+    pub fn jz_nonzero(reg: &str) -> Rule {
+        let name = format!("jz({0}, *) | {0} != 0", reg);
+
+        rule!(
+            ?name {
+                MACHINE(ip[0], state{run}, ?reg[_]),
+                PROG(cm[0], ins[1]),
+                JZ(prog[1], r{?reg}),
+            } => {
+                MACHINE(ip[0], state{mov}, ?reg[_]),
+                PROG(cm[0], ins[1]),
+                JZ(prog[1], r{?reg}),
+            } @ 1.0
+        )
+    }
+
+    pub fn jz_zero(reg: &str, label: &str) -> Rule {
+        let name = format!("jz({0}, {1}) | {0} != 0", reg, label);
+
+        rule!(
+            ?name {
+                MACHINE(ip[0], state{run}, ?reg[.], target{_none}),
+                PROG(cm[0], ins[1]),
+                JZ(prog[1], r{?reg}, l{?label}),
+            } => {
+                MACHINE(ip[.], state{jmp}, ?reg[.], target{?label}),
+                PROG(cm[.], ins[1]),
+                JZ(prog[1], r{?reg}, l{?label}),
+            } @ 1.0
+        )
     }
 
 }

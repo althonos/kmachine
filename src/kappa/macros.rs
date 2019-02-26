@@ -1,42 +1,56 @@
 //! Quasi-quoting macros emulating the Kappa syntax.
 
-
-
-
 macro_rules! rule {
     ($name:literal $left:tt => $right:tt @ $rate:expr) => ({
         let mut rule = $crate::kappa::Rule::with_name($name, $rate);
-        __rule_impl_left!(rule, $left => $right);
+        __rule_impl_slots!(rule, $left => $right);
         rule
     });
-    ($left:tt => $right:tt @ $rate:expr) => ({
-        let mut rule = $crate::kappa::Rule::new($rate);
-        __rule_impl_left!(rule, $left => $right);
-        rule
-    });
-    ($name:literal $left:tt => $right:tt @ $rate:expr) => ({
+    (? $name:ident $left:tt => $right:tt @ $rate:expr) => ({
         let mut rule = $crate::kappa::Rule::with_name($name, $rate);
-        __rule_impl_left!(rule, $left => $right);
+        __rule_impl_slots!(rule, $left => $right);
         rule
     });
     ($left:tt => $right:tt @ $rate:expr) => ({
         let mut rule = $crate::kappa::Rule::new($rate);
-        __rule_impl_left!(rule, $left => $right);
+        __rule_impl_slots!(rule, $left => $right);
+        rule
+    });
+    (? $name:ident $left:tt => $right:tt @ $rate:expr) => ({
+        let mut rule = $crate::kappa::Rule::with_name($name, $rate);
+        __rule_impl_slots!(rule, $left => $right);
+        rule
+    });
+    ($left:tt => $right:tt @ $rate:expr) => ({
+        let mut rule = $crate::kappa::Rule::new($rate);
+        __rule_impl_slots!(rule, $left => $right);
         rule
     });
 }
 
 macro_rules! __rule_impl_slots {
+    // no agent
+    ($rule:ident, {} => {}) => ();
+    // multiple agents
     ($rule:ident, { $l:ident ($($largs:tt)*), $($lrest:tt)* } => {  $r:ident ($($rargs:tt)*), $($rrest:tt)* }) => ({
-        __rule_impl_left!($rule, { $l ($($largs)*) } =>  { $r ($($rargs)*) });
-        __rule_impl_left!($rule, { $($lrest)* } => { $($rrest)* });
+        __rule_impl_slots!($rule, { $l ($($largs)*) } =>  { $r ($($rargs)*) });
+        __rule_impl_slots!($rule, { $($lrest)* } => { $($rrest)* });
     });
+    // single agents
     ($rule:ident, { $l:ident ($($largs:tt)*) } => { $r:ident ($($rargs:tt)*) } ) => ({
         $rule.slot(agent!($l($($largs)*)), agent!($r($($rargs)*)))
     });
+    // allow dangling comma
+    ($rule:ident, { $l:ident ($($largs:tt)*), } => { $r:ident ($($rargs:tt)*) } ) => ({
+        __rule_impl_slots!( $rule, { $l ($($largs)*) } => { $r ($($rargs)*) });
+    });
+    ($rule:ident, { $l:ident ($($largs:tt)*) } => { $r:ident ($($rargs:tt)*), } ) => ({
+        __rule_impl_slots!( $rule, { $l ($($largs)*) } => { $r ($($rargs)*) });
+    });
+    ($rule:ident, { $l:ident ($($largs:tt)*), } => { $r:ident ($($rargs:tt)*), } ) => ({
+        __rule_impl_slots!( $rule, { $l ($($largs)*) } => { $r ($($rargs)*) });
+    });
 }
-
-
 
 #[allow(unused)]
 macro_rules! agent {
