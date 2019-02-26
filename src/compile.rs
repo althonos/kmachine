@@ -15,7 +15,7 @@ pub mod agents {
     where
         I: IntoIterator<Item = &'a &'a Register>,
     {
-        let mut agent = agent!(UNIT());
+        let mut agent = agent!(UNIT(next[prev.UNIT]));
 
         let mut site_prev = site!(prev[next.UNIT]);
         let mut site_r = site!(r { _none });
@@ -26,7 +26,6 @@ pub mod agents {
 
         agent.site(site_prev);
         agent.site(site_r);
-        agent.site(site!(next[prev.UNIT]));
         agent
     }
 
@@ -59,6 +58,24 @@ pub mod agents {
         site = site!(target { _none });
         for label in labels.into_iter() {
             site.state(label.name.as_str());
+        }
+        agent.site(site);
+
+        agent
+    }
+
+    pub fn lbl<'a, L>(labels: L) -> Agent
+    where
+        L: IntoIterator<Item = &'a &'a Label>,
+    {
+        // Agent with baseline sites
+        let mut site;
+        let mut agent = agent!(LBL(prog[ins.PROG]));
+
+        // Add one state to the l site for each label
+        site = site!(l);
+        for label in labels.into_iter() {
+            site.state(label.name.to_string());
         }
         agent.site(site);
 
@@ -146,8 +163,33 @@ pub mod rules {
         )
     }
 
-    // TODO: bind
-    // pub fn bind() -> Rule {}
+    pub fn bind(label: &str) -> Rule {
+        rule!(
+            "bind" {
+                MACHINE(ip[.], state{jmp}, target{?label}),
+                PROG(cm[.], ins[0]),
+                LBL(prog[0], l{?label})
+            } => {
+                MACHINE(ip[1], state{run}, target{?label}),
+                PROG(cm[1], ins[0]),
+                LBL(prog[0], l{?label})
+            } @ 1.0
+        )
+    }
+
+    pub fn lbl() -> Rule {
+        rule!(
+            "label" {
+                MACHINE(ip[0], state{mov}),
+                PROG(cm[0], ins[1]),
+                LBL(prog[1])
+            } => {
+                MACHINE(ip[0], state{run}),
+                PROG(cm[0], ins[1]),
+                LBL(prog[1])
+            } @ 1.0
+        )
+    }
 
     pub fn inc_zero(reg: &str) -> Rule {
         let name = format!("inc({0}) | {0} == 0", reg);
@@ -258,7 +300,7 @@ pub mod rules {
     }
 
     pub fn jz_zero(reg: &str, label: &str) -> Rule {
-        let name = format!("jz({0}, {1}) | {0} != 0", reg, label);
+        let name = format!("jz({0}, {1}) | {0} == 0", reg, label);
 
         rule!(
             ?name {

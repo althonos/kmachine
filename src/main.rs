@@ -70,12 +70,16 @@ fn main() {
                 // instructions
                 .agent(compile::agents::prog())
                 // pseudo-operands
+                .agent(compile::agents::lbl(&labels))
                 .agent(compile::agents::inc(&registers))
                 .agent(compile::agents::dec(&registers))
                 .agent(compile::agents::jz(&registers, &labels));
 
             // Build static rules
-            program.rule(compile::rules::mov());
+            program.rule(compile::rules::mov())
+                .rule(compile::rules::lbl());
+
+            // Build register-dependent rules
             for register in registers.iter() {
                 program
                     .rule(compile::rules::inc_nonzero(&register.name))
@@ -84,8 +88,19 @@ fn main() {
                     .rule(compile::rules::dec_one(&register.name))
                     .rule(compile::rules::dec_more(&register.name))
                     .rule(compile::rules::jz_nonzero(&register.name));
-                for label in labels.iter() {
-                    program.rule(compile::rules::jz_zero(&register.name, &label.name));
+            }
+
+            // Build label-dependent rules
+            for label in labels.iter() {
+                program
+                    .rule(compile::rules::bind(&label.name));
+            }
+
+            // Build label-register-dependent rules
+            for label in labels.iter() {
+                for register in registers.iter() {
+                    program
+                        .rule(compile::rules::jz_zero(&register.name, &label.name));
                 }
             }
 
