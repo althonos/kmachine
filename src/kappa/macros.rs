@@ -1,12 +1,41 @@
-use super::Agent;
+//! Quasi-quoting macros emulating the Kappa syntax.
 
 
-// macro_rules! rule {
-//
-//
-//
-//
-// }
+
+
+macro_rules! rule {
+    ($name:literal $left:tt => $right:tt @ $rate:expr) => ({
+        let mut rule = $crate::kappa::Rule::with_name($name, $rate);
+        __rule_impl_left!(rule, $left => $right);
+        rule
+    });
+    ($left:tt => $right:tt @ $rate:expr) => ({
+        let mut rule = $crate::kappa::Rule::new($rate);
+        __rule_impl_left!(rule, $left => $right);
+        rule
+    });
+    ($name:literal $left:tt => $right:tt @ $rate:expr) => ({
+        let mut rule = $crate::kappa::Rule::with_name($name, $rate);
+        __rule_impl_left!(rule, $left => $right);
+        rule
+    });
+    ($left:tt => $right:tt @ $rate:expr) => ({
+        let mut rule = $crate::kappa::Rule::new($rate);
+        __rule_impl_left!(rule, $left => $right);
+        rule
+    });
+}
+
+macro_rules! __rule_impl_slots {
+    ($rule:ident, { $l:ident ($($largs:tt)*), $($lrest:tt)* } => {  $r:ident ($($rargs:tt)*), $($rrest:tt)* }) => ({
+        __rule_impl_left!($rule, { $l ($($largs)*) } =>  { $r ($($rargs)*) });
+        __rule_impl_left!($rule, { $($lrest)* } => { $($rrest)* });
+    });
+    ($rule:ident, { $l:ident ($($largs:tt)*) } => { $r:ident ($($rargs:tt)*) } ) => ({
+        $rule.slot(agent!($l($($largs)*)), agent!($r($($rargs)*)))
+    });
+}
+
 
 
 #[allow(unused)]
@@ -23,9 +52,9 @@ macro_rules! agent {
         agent
     });
 
-    ($name:ident($site:ident { $($states:ident),* } )) => ({
+    ($name:ident($site:ident { $($states:tt)* } )) => ({
         let mut agent = agent!($name());
-        agent.site(site!($site {$($states),*}));
+        agent.site(site!($site {$($states)*}));
         agent
     });
 
@@ -157,9 +186,9 @@ macro_rules! __site_impl_links {
     ($site:ident [#]) => ({$site.link(link!(#));});
     ($site:ident [.]) => ({$site.link(link!(.));});
     ($site:ident [_]) => ({$site.link(link!(_));});
-    ($site:ident [$other:ident . $agent:ident]) => ({
-        $site.link(link!($other . $agent));
-    });
+    ($site:ident [$other:ident . $agent:ident]) => (
+        $site.link(link!($other . $agent))
+    );
     ($site:ident [$n:expr]) => ({$site.link(link!($n));});
     ($site:ident [#, $($link:tt)*]) => ({
         $site.link(link!(#));
