@@ -78,7 +78,6 @@ fn main() {
             // Build static rules
             program.rule(compile::rules::mov())
                 .rule(compile::rules::lbl());
-
             // Build register-dependent rules
             for register in registers.iter() {
                 program
@@ -89,13 +88,11 @@ fn main() {
                     .rule(compile::rules::dec_more(&register.name))
                     .rule(compile::rules::jz_nonzero(&register.name));
             }
-
             // Build label-dependent rules
             for label in labels.iter() {
                 program
                     .rule(compile::rules::bind(&label.name));
             }
-
             // Build label-register-dependent rules
             for label in labels.iter() {
                 for register in registers.iter() {

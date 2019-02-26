@@ -35,7 +35,7 @@ pub mod agents {
                 prev[next.PROG],
                 next[prev.PROG],
                 cm[ip.MACHINE],
-                ins[prog.INC, prog.DEC, prog.JZ]
+                ins[prog.INC, prog.DEC, prog.JZ, prog.LBL]
             )
         )
     }
@@ -180,11 +180,11 @@ pub mod rules {
     pub fn lbl() -> Rule {
         rule!(
             "label" {
-                MACHINE(ip[0], state{mov}),
+                MACHINE(ip[0], state{run}),
                 PROG(cm[0], ins[1]),
                 LBL(prog[1])
             } => {
-                MACHINE(ip[0], state{run}),
+                MACHINE(ip[0], state{mov}),
                 PROG(cm[0], ins[1]),
                 LBL(prog[1])
             } @ 1.0
