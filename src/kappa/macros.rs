@@ -1,5 +1,14 @@
 use super::Agent;
 
+
+// macro_rules! rule {
+//
+//
+//
+//
+// }
+
+
 #[allow(unused)]
 macro_rules! agent {
 
@@ -48,30 +57,30 @@ macro_rules! __agent_impl_sites {
     ($agent:ident, $name:ident) => ({
         $agent.site(site!($name));
     });
-    ($agent:ident, @ $name:ident) => ({
-        $agent.site(site!(@ $name));
+    ($agent:ident, ? $name:ident) => ({
+        $agent.site(site!(? $name));
     });
 
     ($agent:ident, $name:ident [$($link:tt)*]) => ({
         $agent.site(site!($name [$($link)*]));
     });
-    ($agent:ident, @ $name:ident [$($link:tt)*]) => ({
-        $agent.site(site!(@ $name [$($link)*]));
+    ($agent:ident, ? $name:ident [$($link:tt)*]) => ({
+        $agent.site(site!(? $name [$($link)*]));
     });
 
     ($agent:ident, $name:ident {$($states:tt)*}) => ({
         $agent.site(site!($name {$($states)*}));
     });
-    ($agent:ident, @ $name:ident {$($states:tt)*}) => ({
-        $agent.site(site!(@ $name {$($states)*}));
+    ($agent:ident, ? $name:ident {$($states:tt)*}) => ({
+        $agent.site(site!(? $name {$($states)*}));
     });
 
     ($agent:ident, $name:ident [$($link:tt)*], $($rest:tt)*) => ({
         $agent.site(site!($name [$($link)*]));
         __agent_impl_sites!($agent, $($rest)*);
     });
-    ($agent:ident, @ $name:ident [$($link:tt)*], $($rest:tt)*) => ({
-        $agent.site(site!(@ $name [$($link)*]));
+    ($agent:ident, ? $name:ident [$($link:tt)*], $($rest:tt)*) => ({
+        $agent.site(site!(? $name [$($link)*]));
         __agent_impl_sites!($agent, $($rest)*);
     });
 
@@ -79,8 +88,8 @@ macro_rules! __agent_impl_sites {
         $agent.site(site!($name {$($states)*}));
         __agent_impl_sites!($agent, $($rest)*);
     });
-    ($agent:ident, @ $name:ident {$($states:tt)*}, $($rest:tt)*) => ({
-        $agent.site(site!(@ $name {$($states)*}));
+    ($agent:ident, ? $name:ident {$($states:tt)*}, $($rest:tt)*) => ({
+        $agent.site(site!(? $name {$($states)*}));
         __agent_impl_sites!($agent, $($rest)*);
     });
 
@@ -88,8 +97,8 @@ macro_rules! __agent_impl_sites {
         $agent.site(site!($name [$($link)*]));
         __agent_impl_sites!($agent, $($rest)*);
     });
-    ($agent:ident, @ $name:ident {$($states:tt)*} [$($link:tt)*], $($rest:tt)*) => ({
-        $agent.site(site!(@ $name [$($link)*]));
+    ($agent:ident, ? $name:ident {$($states:tt)*} [$($link:tt)*], $($rest:tt)*) => ({
+        $agent.site(site!(? $name [$($link)*]));
         __agent_impl_sites!($agent, $($rest)*);
     });
 }
@@ -98,25 +107,25 @@ macro_rules! __agent_impl_sites {
 macro_rules! site {
 
     ($name:ident) => ($crate::kappa::Site::new(stringify!($name)));
-    (@ $name:ident) => ($crate::kappa::Site::new($name));
+    (? $name:ident) => ($crate::kappa::Site::new($name));
 
-    // (@) r{...}
+    // (?) r{...}
     ($name:ident {$($states:tt)*}) => ( site!($name { $($states)* } []) );
-    (@ $name:ident {$($states:tt)*}) => ( site!(@ $name { $($states)* } []) );
+    (? $name:ident {$($states:tt)*}) => ( site!(? $name { $($states)* } []) );
 
-    // (@) r[...]
+    // (?) r[...]
     ($name:ident [$($link:tt)*]) => ( site!($name {} [$($link)*]) );
-    (@ $name:ident [$($link:tt)*]) => ( site!(@ $name {} [$($link)*]) );
+    (? $name:ident [$($link:tt)*]) => ( site!(? $name {} [$($link)*]) );
 
-    // (@) r{...}[...]
+    // (?) r{...}[...]
     ($name:ident {$($states:tt)*} [$($link:tt)*]) => ({
         let mut site = site!($name);
         __site_impl_links!(site [$($link)*]);
         __site_impl_states!(site {$($states)*});
         site
     });
-    (@ $name:ident {$($states:tt)*} [$($link:tt)*]) => ({
-        let mut site = site!(@ $name);
+    (? $name:ident {$($states:tt)*} [$($link:tt)*]) => ({
+        let mut site = site!(? $name);
         __site_impl_links!(site [$($link)*]);
         __site_impl_states!(site {$($states)*});
         site
@@ -129,15 +138,15 @@ macro_rules! __site_impl_states {
     ($site:ident {$state:ident}) => ({
         $site.state(stringify!($state));
     });
-    ($site:ident {@ $state:ident}) => ({
+    ($site:ident {? $state:ident}) => ({
         $site.state($state);
     });
     ($site:ident {$state:ident, $($rest:tt)*}) => ({
         __site_impl_states!($site {$state});
         __site_impl_states!($site {$($rest)*});
     });
-    ($site:ident {@ $state:ident, $($rest:tt)*}) => ({
-        __site_impl_states!($site {@ $state});
+    ($site:ident {? $state:ident, $($rest:tt)*}) => ({
+        __site_impl_states!($site {? $state});
         __site_impl_states!($site {$($rest)*});
     });
 }

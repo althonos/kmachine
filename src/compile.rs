@@ -62,9 +62,11 @@ pub mod agents {
     where
         I: IntoIterator<Item = &'a &'a Register>,
     {
+        // Agent with baseline sites
         let mut site;
         let mut agent = agent!(INC(prog[ins.PROG]));
 
+        // Add one state to the r site for each register
         site = site!(r);
         for register in registers.into_iter() {
             site.state(register.name.to_string());
@@ -78,9 +80,11 @@ pub mod agents {
     where
         I: IntoIterator<Item = &'a &'a Register>,
     {
+        // Agent with baseline sites
         let mut site;
         let mut agent = agent!(DEC(prog[ins.PROG]));
 
+        // Add one state to the r site for each register
         site = site!(r);
         for register in registers.into_iter() {
             site.state(register.name.to_string());
@@ -95,9 +99,11 @@ pub mod agents {
         I: IntoIterator<Item = &'a &'a Register>,
         L: IntoIterator<Item = &'a &'a Label>,
     {
+        // Agent with baseline sites
         let mut site;
         let mut agent = agent!(JZ(prog[ins.PROG]));
 
+        // Add one state to the r site for each register
         site = site!(r);
         for register in registers.into_iter() {
             site.state(register.name.to_string());
@@ -140,14 +146,14 @@ pub mod rules {
         );
 
         rule.slot(
-            agent!(MACHINE(ip[0], state{run}, @reg[.])),
-            agent!(MACHINE(ip[0], state{mov}, @reg[1])),
+            agent!(MACHINE(ip[0], state{run}, ?reg[.])),
+            agent!(MACHINE(ip[0], state{mov}, ?reg[1])),
         );
-        rule.slot(agent!(INC(prog[3], r{@reg})), agent!(INC(prog[3], r{@reg})));
+        rule.slot(agent!(INC(prog[3], r{?reg})), agent!(INC(prog[3], r{?reg})));
         rule.slot(agent!(PROG(cm[0], ins[3])), agent!(PROG(cm[0], ins[3])));
         rule.slot(
             agent!(UNIT(prev[.], next[.], r{none})),
-            agent!(UNIT(prev[1], next[.], r{@reg})),
+            agent!(UNIT(prev[1], next[.], r{?reg})),
         );
 
         rule
@@ -161,15 +167,15 @@ pub mod rules {
         );
 
         rule.slot(
-            agent!(MACHINE(ip[0], state{run}, @reg[1])),
-            agent!(MACHINE(ip[0], state{mov}, @reg[1])),
+            agent!(MACHINE(ip[0], state{run}, ?reg[1])),
+            agent!(MACHINE(ip[0], state{mov}, ?reg[1])),
         );
-        rule.slot(agent!(INC(prog[3], r{@reg})), agent!(INC(prog[3], r{@reg})));
+        rule.slot(agent!(INC(prog[3], r{?reg})), agent!(INC(prog[3], r{?reg})));
         rule.slot(agent!(PROG(cm[0], ins[3])), agent!(PROG(cm[0], ins[3])));
         rule.slot(agent!(UNIT(prev[1])), agent!(UNIT(prev[2])));
         rule.slot(
             agent!(UNIT(prev[.], next[.], r{none})),
-            agent!(UNIT(prev[1], next[2], r{@reg})),
+            agent!(UNIT(prev[1], next[2], r{?reg})),
         );
 
         rule
@@ -183,10 +189,10 @@ pub mod rules {
         );
 
         rule.slot(
-            agent!(MACHINE(ip[0], state{run}, @reg[.])),
-            agent!(MACHINE(ip[0], state{mov}, @reg[.])),
+            agent!(MACHINE(ip[0], state{run}, ?reg[.])),
+            agent!(MACHINE(ip[0], state{mov}, ?reg[.])),
         );
-        rule.slot(agent!(DEC(prog[2], r{@reg})), agent!(DEC(prog[2], r{@reg})));
+        rule.slot(agent!(DEC(prog[2], r{?reg})), agent!(DEC(prog[2], r{?reg})));
         rule.slot(agent!(PROG(cm[0], ins[2])), agent!(PROG(cm[0], ins[2])));
 
         rule
@@ -200,13 +206,13 @@ pub mod rules {
         );
 
         rule.slot(
-            agent!(MACHINE(ip[0], state{run}, @reg[1])),
-            agent!(MACHINE(ip[0], state{mov}, @reg[.])),
+            agent!(MACHINE(ip[0], state{run}, ?reg[1])),
+            agent!(MACHINE(ip[0], state{mov}, ?reg[.])),
         );
-        rule.slot(agent!(DEC(prog[3], r{@reg})), agent!(DEC(prog[3], r{@reg})));
+        rule.slot(agent!(DEC(prog[3], r{?reg})), agent!(DEC(prog[3], r{?reg})));
         rule.slot(agent!(PROG(cm[0], ins[3])), agent!(PROG(cm[0], ins[3])));
         rule.slot(
-            agent!(UNIT(prev[1], next[.], r{@reg})),
+            agent!(UNIT(prev[1], next[.], r{?reg})),
             agent!(UNIT(prev[.], next[.], r{none})),
         );
 
@@ -221,13 +227,13 @@ pub mod rules {
         );
 
         rule.slot(
-            agent!(MACHINE(ip[0], state{run}, @reg[1])),
-            agent!(MACHINE(ip[0], state{mov}, @reg[2])),
+            agent!(MACHINE(ip[0], state{run}, ?reg[1])),
+            agent!(MACHINE(ip[0], state{mov}, ?reg[2])),
         );
-        rule.slot(agent!(DEC(prog[3], r{@reg})), agent!(DEC(prog[3], r{@reg})));
+        rule.slot(agent!(DEC(prog[3], r{?reg})), agent!(DEC(prog[3], r{?reg})));
         rule.slot(agent!(PROG(cm[0], ins[3])), agent!(PROG(cm[0], ins[3])));
         rule.slot(
-            agent!(UNIT(prev[1], next[2], r{@reg})),
+            agent!(UNIT(prev[1], next[2], r{?reg})),
             agent!(UNIT(prev[.], next[.], r{none})),
         );
         rule.slot(agent!(UNIT(prev[2])), agent!(UNIT(prev[2])));
