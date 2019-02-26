@@ -170,7 +170,7 @@ pub mod rules {
                 PROG(cm[.], ins[0]),
                 LBL(prog[0], l{?label})
             } => {
-                MACHINE(ip[1], state{run}, target{?label}),
+                MACHINE(ip[1], state{run}, target{_none}),
                 PROG(cm[1], ins[0]),
                 LBL(prog[0], l{?label})
             } @ 1.0
@@ -217,14 +217,14 @@ pub mod rules {
                 MACHINE(ip[0], state{run}, ?reg[2]),
                 PROG(cm[0], ins[1]),
                 INC(prog[1], r{?reg}),
-                UNIT(prev[2], next[.]),
+                UNIT(prev[2]),
                 UNIT(prev[.], next[.], r{_none}),
             } => {
                 MACHINE(ip[0], state{mov}, ?reg[2]),
                 PROG(cm[0], ins[1]),
                 INC(prog[1], r{?reg}),
-                UNIT(prev[2], next[3]),
-                UNIT(prev[3], next[.], r{?reg}),
+                UNIT(prev[3]),
+                UNIT(prev[2], next[3], r{?reg}),
             } @ 1.0
         )
     }
