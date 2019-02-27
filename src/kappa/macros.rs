@@ -49,39 +49,69 @@ macro_rules! __rule_impl_slots {
 
 #[allow(unused)]
 macro_rules! agent {
-    // A()
+    // (?) A()
     ($name:ident()) => ({
         $crate::kappa::Agent::new(stringify!($name))
     });
-    // A(x)
+    (? $name:ident()) => ({
+        $crate::kappa::Agent::new($name)
+    });
+    // (?) A(x)
     ($name:ident ( $site:ident, $($rest:tt)* ) ) => ({
         let mut agent = agent!($name());
         __agent_impl_sites!(agent,  $($sites)*);
         agent
     });
-    // A(x{...})
+    (? $name:ident ( $site:ident, $($rest:tt)* ) ) => ({
+        let mut agent = agent!(? $name());
+        __agent_impl_sites!(agent,  $($sites)*);
+        agent
+    });
+    // (?) A(x{...})
     ($name:ident( $site:ident { $($states:tt)* } )) => ({
         let mut agent = agent!($name());
         agent.site(site!($site {$($states)*}));
         agent
     });
-    // A(x[...])
+    (? $name:ident( $site:ident { $($states:tt)* } )) => ({
+        let mut agent = agent!(? $name());
+        agent.site(site!($site {$($states)*}));
+        agent
+    });
+    // (?) A(x[...])
     ($name:ident($site:ident [$($links:tt)*] )) => ({
         let mut agent = agent!($name());
         agent.site(site!($site [$($links)*]));
         agent
     });
-    // A(x{...}, ...)
+    (? $name:ident($site:ident [$($links:tt)*] )) => ({
+        let mut agent = agent!(? $name());
+        agent.site(site!($site [$($links)*]));
+        agent
+    });
+    // (?) A(x{...}, ...)
     ($name:ident($site:ident {$($states:ident),*}, $($rest:tt)* )) => ({
         agent!($name($site {$($states),*} [], $($rest)* ))
     });
-    // A(x[...], ...)
+    (? $name:ident($site:ident {$($states:ident),*}, $($rest:tt)* )) => ({
+        agent!(? $name($site {$($states),*} [], $($rest)* ))
+    });
+    // (?) A(x[...], ...)
     ($name:ident($site:ident [$($links:tt)*], $($rest:tt)* )) => ({
         agent!($name($site {} [$($links)*], $($rest)* ))
+    });
+    (? $name:ident($site:ident [$($links:tt)*], $($rest:tt)* )) => ({
+        agent!(? $name($site {} [$($links)*], $($rest)* ))
     });
     // A(x{...}[...], ...)
     ($name:ident($site:ident {$($states:ident),*} [$($links:tt)*], $($rest:tt)* )) => ({
         let mut agent = agent!($name());
+        agent.site(site!($site {$($states),*} [$($links)*]));
+        __agent_impl_sites!(agent, $($rest)*);
+        agent
+    });
+    (? $name:ident($site:ident {$($states:ident),*} [$($links:tt)*], $($rest:tt)* )) => ({
+        let mut agent = agent!(? $name());
         agent.site(site!($site {$($states),*} [$($links)*]));
         __agent_impl_sites!(agent, $($rest)*);
         agent
