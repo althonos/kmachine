@@ -1,26 +1,28 @@
 //! Quasi-quoting macros emulating the Kappa syntax.
 
+#[macro_export]
 macro_rules! rule {
     // 'rule' {} => {}
     ($name:literal $left:tt => $right:tt @ $rate:expr) => ({
-        let mut rule = $crate::kappa::Rule::with_name($name, $rate);
+        let mut rule = $crate::Rule::with_name($name, $rate);
         __rule_impl_slots!(rule, $left => $right);
         rule
     });
     // ?rule {} => {}
     (? $name:ident $left:tt => $right:tt @ $rate:expr) => ({
-        let mut rule = $crate::kappa::Rule::with_name($name, $rate);
+        let mut rule = $crate::Rule::with_name($name, $rate);
         __rule_impl_slots!(rule, $left => $right);
         rule
     });
     // {} => {}
     ($left:tt => $right:tt @ $rate:expr) => ({
-        let mut rule = $crate::kappa::Rule::new($rate);
+        let mut rule = $crate::Rule::new($rate);
         __rule_impl_slots!(rule, $left => $right);
         rule
     });
 }
 
+#[macro_export]
 macro_rules! __rule_impl_slots {
     // {} => {}
     ($rule:ident, {} => {}) => ();
@@ -47,14 +49,14 @@ macro_rules! __rule_impl_slots {
     });
 }
 
-#[allow(unused)]
+#[macro_export]
 macro_rules! agent {
     // (?) A()
     ($name:ident()) => ({
-        $crate::kappa::Agent::new(stringify!($name))
+        $crate::Agent::new(stringify!($name))
     });
     (? $name:ident()) => ({
-        $crate::kappa::Agent::new($name)
+        $crate::Agent::new($name)
     });
     // (?) A(x)
     ($name:ident ( $site:ident, $($rest:tt)* ) ) => ({
@@ -118,7 +120,7 @@ macro_rules! agent {
     });
 }
 
-#[doc(hidden)]
+#[macro_export]
 macro_rules! __agent_impl_sites {
     // (?) r
     ($agent:ident, $name:ident) => ({
@@ -170,11 +172,11 @@ macro_rules! __agent_impl_sites {
     });
 }
 
-#[allow(unused)]
+#[macro_export]
 macro_rules! site {
     // (?) r
-    ($name:ident) => ($crate::kappa::Site::new(stringify!($name)));
-    (? $name:ident) => ($crate::kappa::Site::new($name));
+    ($name:ident) => ($crate::Site::new(stringify!($name)));
+    (? $name:ident) => ($crate::Site::new($name));
     // (?) r{...}
     ($name:ident {$($states:tt)*}) => ( site!($name { $($states)* } []) );
     (? $name:ident {$($states:tt)*}) => ( site!(? $name { $($states)* } []) );
@@ -196,7 +198,7 @@ macro_rules! site {
     });
 }
 
-#[doc(hidden)]
+#[macro_export]
 macro_rules! __site_impl_states {
     ($site:ident {}) => ();
     ($site:ident {$state:ident}) => ({
@@ -215,7 +217,7 @@ macro_rules! __site_impl_states {
     });
 }
 
-#[doc(hidden)]
+#[macro_export]
 macro_rules! __site_impl_links {
     ($site:ident []) => ();
     ($site:ident [#]) => ({$site.link(link!(#));});
@@ -252,27 +254,27 @@ macro_rules! __site_impl_links {
     });
 }
 
-#[allow(unused)]
+#[macro_export]
 macro_rules! link {
     (.) => {
-        $crate::kappa::Link::Free
+        $crate::Link::Free
     };
     (#) => {
-        $crate::kappa::Link::Unknown
+        $crate::Link::Unknown
     };
     (_) => {
-        $crate::kappa::Link::Bound
+        $crate::Link::Bound
     };
     ($site:ident . $agent:ident) => {
-        $crate::kappa::Link::BoundTo {
+        $crate::Link::BoundTo {
             agent: stringify!($agent).to_string(),
             site: stringify!($site).to_string(),
         }
     };
     ($site:expr) => {
-        $crate::kappa::Link::Numbered($site)
+        $crate::Link::Numbered($site)
     };
     (? $site:ident) => {
-        $crate::kappa::Link::Numbered($site)
+        $crate::Link::Numbered($site)
     };
 }

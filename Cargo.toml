@@ -6,13 +6,17 @@ edition = "2018"
 
 [dependencies]
 indexmap = "1.0"
-pest = "2.1"
-pest_derive = "2.1"
+# pest = "2.1"
+# pest_derive = "2.1"
 
 [dependencies.kmachine-asm]
 path = "./kmachine-asm"
 
+[dependencies.kmachine-kappa]
+path = "./kmachine-kappa"
+
 [workspace]
 members = [
   "kmachine-asm",
+  "kmachine-kappa"
 ]

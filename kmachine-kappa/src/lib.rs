@@ -1,6 +1,8 @@
 //!
 
-#[macro_use]
+extern crate indexmap;
+
+#[macro_export]
 mod macros;
 
 mod agent;

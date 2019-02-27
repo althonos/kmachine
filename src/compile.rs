@@ -3,10 +3,10 @@ use std::iter::IntoIterator;
 use kmachine_asm::Label;
 use kmachine_asm::Register;
 
-use super::kappa::Agent;
-use super::kappa::Link;
-use super::kappa::Rule;
-use super::kappa::Site;
+use kmachine_kappa::Agent;
+use kmachine_kappa::Link;
+use kmachine_kappa::Rule;
+use kmachine_kappa::Site;
 
 pub mod agents {
 

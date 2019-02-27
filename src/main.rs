@@ -1,15 +1,10 @@
 #![allow(unused_macros, unused_imports)]
 
-#[macro_use]
-extern crate pest_derive;
-
 extern crate indexmap;
-extern crate kmachine_asm;
-extern crate pest;
-
 #[macro_use]
-pub mod kappa;
-// pub mod asm;
+extern crate kmachine_kappa;
+extern crate kmachine_asm;
+
 mod compile;
 
 use std::borrow::Cow;
@@ -22,14 +17,13 @@ use kmachine_asm::AsmParser;
 use kmachine_asm::Label;
 use kmachine_asm::Line;
 use kmachine_asm::Register;
-
-use self::kappa::Agent;
-use self::kappa::Init;
-use self::kappa::KappaProgram;
-use self::kappa::Site;
-use self::kappa::Observable;
-use self::kappa::Pattern;
-use self::kappa::AlgebraicExpression;
+use kmachine_kappa::Agent;
+use kmachine_kappa::Init;
+use kmachine_kappa::KappaProgram;
+use kmachine_kappa::Site;
+use kmachine_kappa::Observable;
+use kmachine_kappa::Pattern;
+use kmachine_kappa::AlgebraicExpression;
 
 fn main() {
     for filename in std::env::args().skip(1) {
