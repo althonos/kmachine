@@ -1,6 +1,6 @@
 # ϰmachine
 
-*A toy compiler that produces Kappa code from Counter Machine instructions.*
+*A toy compiler that produces Kappa code from counter machine instructions.*
 
 ## Syntax
 

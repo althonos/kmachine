@@ -1,12 +1,20 @@
-//! Abstract syntax structures for counter machine programs.
+//! Abstract syntax structures for assembler programs.
 
-pub mod att;
+extern crate indexmap;
+#[macro_use]
+extern crate pest_derive;
+extern crate pest;
+
+mod att;
 
 use std::borrow::Cow;
 use std::borrow::ToOwned;
 use std::iter::FromIterator;
 
 use indexmap::IndexSet;
+use pest::Parser;
+
+pub use self::att::AttParser;
 
 /// A register, e.g. `%rax`.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -178,16 +186,21 @@ impl<'a> AsmProgram<'a> {
     ///
     /// ## Example
     /// ```rust
-    /// # use kappamachine::asm::{AttParser, AsmProgram, Label};
-    /// let program: AsmProgram = AttParser.parse_asm(
-    ///     """
+    /// # #[macro_use]
+    /// # extern crate indexmap;
+    /// # use asm::{AttParser, AsmParser, AsmProgram, Label};
+    /// # pub fn main() {
+    /// let program: AsmProgram = AttParser::parse_asm(
+    ///     "
     ///     label1:
     ///         inc %rax
     ///         jz  %rax, label2
-    ///     """
+    ///     "
     /// );
     ///
-    /// assert_eq!(program.labels(), indexset!{Label::new("label1")}));
+    /// let label = Label::new("label1");
+    /// assert_eq!(program.labels(), indexset!{&label});
+    /// # }
     /// ```
     pub fn labels(&self) -> IndexSet<&Label<'a>> {
         self.lines()

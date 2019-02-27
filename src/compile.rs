@@ -1,7 +1,8 @@
 use std::iter::IntoIterator;
 
-use super::asm::Label;
-use super::asm::Register;
+use kmachine_asm::Label;
+use kmachine_asm::Register;
+
 use super::kappa::Agent;
 use super::kappa::Link;
 use super::kappa::Rule;

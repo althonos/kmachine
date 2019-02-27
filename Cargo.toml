@@ -1,5 +1,5 @@
 [package]
-name = "kappamachine"
+name = "kmachine"
 version = "0.1.0"
 authors = ["Martin Larralde <martin.larralde@ens-paris-saclay.fr>"]
 edition = "2018"
@@ -8,3 +8,11 @@ edition = "2018"
 indexmap = "1.0"
 pest = "2.1"
 pest_derive = "2.1"
+
+[dependencies.kmachine-asm]
+path = "./kmachine-asm"
+
+[workspace]
+members = [
+  "kmachine-asm",
+]

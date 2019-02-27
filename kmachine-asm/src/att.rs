@@ -15,7 +15,7 @@ use super::Literal;
 use super::Register;
 
 #[derive(Parser)]
-#[grammar = "asm/att.pest"]
+#[grammar = "att.pest"]
 pub struct AttParser;
 
 impl AsmParser for AttParser {

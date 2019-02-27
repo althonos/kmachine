@@ -4,24 +4,25 @@
 extern crate pest_derive;
 
 extern crate indexmap;
+extern crate kmachine_asm;
 extern crate pest;
 
 #[macro_use]
 pub mod kappa;
-pub mod asm;
+// pub mod asm;
 mod compile;
 
 use std::borrow::Cow;
 use std::io::Read;
 
 use indexmap::IndexSet;
+use kmachine_asm::AttParser;
+use kmachine_asm::Arg;
+use kmachine_asm::AsmParser;
+use kmachine_asm::Label;
+use kmachine_asm::Line;
+use kmachine_asm::Register;
 
-use self::asm::att::AttParser;
-use self::asm::Arg;
-use self::asm::AsmParser;
-use self::asm::Label;
-use self::asm::Line;
-use self::asm::Register;
 use self::kappa::Agent;
 use self::kappa::Init;
 use self::kappa::KappaProgram;
