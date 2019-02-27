@@ -38,20 +38,97 @@ impl<'a> Label<'a> {
     }
 }
 
+/// A literal in the program, e.g. `$0x8`
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+pub struct Literal {
+    value: usize,
+}
+
+impl Literal {
+    pub fn new(value: usize) -> Self {
+        Self { value }
+    }
+}
+
 /// An operand with its arguments, e.g. `jnz %rax, start`
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub enum Op<'a> {
-    Clr(Register<'a>),
-    Dec(Register<'a>),
-    Inc(Register<'a>),
-    Jz(Register<'a>, Label<'a>),
+pub struct Instruction<'a> {
+    op: Cow<'a, str>,
+    args: Vec<Arg<'a>>,
+}
+
+impl<'a> Instruction<'a> {
+
+    pub fn new<O>(op: O) -> Self
+    where
+        O: Into<Cow<'a, str>>,
+    {
+        Self {
+            op: op.into(),
+            args: Vec::new(),
+        }
+    }
+
+    pub fn with_args<O, A>(op: O, args: A) -> Self
+    where
+        O: Into<Cow<'a, str>>,
+        A: IntoIterator<Item = Arg<'a>>,
+    {
+        let mut ins = Self::new(op);
+        for arg in args.into_iter() {
+            ins.argument(arg);
+        }
+        ins
+    }
+
+    pub fn argument<A>(&mut self, arg: A) -> &mut Self
+    where
+        A: Into<Arg<'a>>,
+    {
+        self.args.push(arg.into());
+        self
+    }
+
+    pub fn op(&self) -> &str {
+        &self.op
+    }
+
+    pub fn arguments(&self) -> &Vec<Arg<'a>> {
+        &self.args
+    }
+}
+
+/// An argument to an instruction, e.g. `%rax` or `$1`.
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+pub enum Arg<'a> {
+    Register(Register<'a>),
+    Label(Label<'a>),
+    Literal(Literal),
+}
+
+impl<'a> From<Register<'a>> for Arg<'a> {
+    fn from(r: Register<'a>) -> Self {
+        Arg::Register(r)
+    }
+}
+
+impl<'a> From<Label<'a>> for Arg<'a> {
+    fn from(l: Label<'a>) -> Self {
+        Arg::Label(l)
+    }
+}
+
+impl<'a> From<Literal> for Arg<'a> {
+    fn from(l: Literal) -> Self {
+        Arg::Literal(l)
+    }
 }
 
 /// A program line.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Line<'a> {
     LabelLine(Label<'a>),
-    OpLine(Op<'a>),
+    OpLine(Instruction<'a>),
 }
 
 impl<'a> From<Label<'a>> for Line<'a> {
@@ -60,9 +137,9 @@ impl<'a> From<Label<'a>> for Line<'a> {
     }
 }
 
-impl<'a> From<Op<'a>> for Line<'a> {
-    fn from(op: Op<'a>) -> Self {
-        Line::OpLine(op)
+impl<'a> From<Instruction<'a>> for Line<'a> {
+    fn from(ins: Instruction<'a>) -> Self {
+        Line::OpLine(ins)
     }
 }
 
@@ -86,11 +163,14 @@ impl<'a> AsmProgram<'a> {
             .into_iter()
             .flat_map(|ref line| match line {
                 Line::LabelLine(_) => None,
-                Line::OpLine(op) => match op {
-                    Op::Clr(r) => Some(r),
-                    Op::Inc(r) => Some(r),
-                    Op::Dec(r) => Some(r),
-                    Op::Jz(r, _) => Some(r),
+                Line::OpLine(ins) => match ins.op() {
+                    "clr" | "dec" | "inc" | "jz" => {
+                        match ins.arguments().first() {
+                            Some(Arg::Register(r)) => Some(r),
+                            _ => None
+                        }
+                    }
+                    _ => None
                 },
             })
             .collect()

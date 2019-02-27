@@ -11,15 +11,16 @@ pub mod kappa;
 pub mod asm;
 mod compile;
 
+use std::borrow::Cow;
 use std::io::Read;
 
 use indexmap::IndexSet;
 
 use self::asm::att::AttParser;
 use self::asm::AsmParser;
+use self::asm::Arg;
 use self::asm::Label;
 use self::asm::Line;
-use self::asm::Op;
 use self::asm::Register;
 use self::kappa::Agent;
 use self::kappa::KappaProgram;
@@ -36,17 +37,17 @@ fn main() {
         let asm = AttParser::parse_asm(&program);
 
         // Collect all registers used in the program.
-        let registers: IndexSet<_> = asm
+        let registers: IndexSet<&Cow<_>> = asm
             .registers()
             .into_iter()
             .map(|r| &r.name)
             .collect();
 
         // Collect all labels declared in the program.
-        let labels: IndexSet<_> = asm
+        let labels: IndexSet<&Cow<_>> = asm
             .labels()
             .into_iter()
-            .map(|r| &l.name)
+            .map(|l| &l.name)
             .collect();
 
         // Compile the CM program into a Kappa source
@@ -126,25 +127,41 @@ fn main() {
                         let label = l.name.as_ref();
                         agent!(LBL(prog[?idx_prog], l{?label}))
                     }
-                    Line::OpLine(op) => match op {
-                        Op::Clr(r) => {
-                            let register = r.name.as_ref();
+                    Line::OpLine(ins) => match ins.op() {
+                        opname @ "clr" | opname @ "inc" | opname @ "dec" => {
+                            let name = opname.to_uppercase();
+                            let register = match ins.arguments().first()  {
+                                Some(Arg::Register(r)) => r.name.as_ref(),
+                                Some(arg) => panic!("invalid argument #1 for instruction `{}`: {:?}", opname, arg),
+                                None => panic!("missing argument for instruction `{}`"),
+                            };
                             agent!(CLR(prog[?idx_prog], r{?register}))
                         }
-                        Op::Dec(r) => {
-                            let register = r.name.as_ref();
-                            agent!(DEC(prog[?idx_prog], r{?register}))
-                        }
-                        Op::Inc(r) => {
-                            let register = r.name.as_ref();
-                            agent!(INC(prog[?idx_prog], r{?register}))
-                        }
-                        Op::Jz(r, l) => {
-                            let label = l.name.as_ref();
-                            let register = r.name.as_ref();
-                            assert!(labels.contains(&l.name));
+                        // "dec" => {
+                        //     let register = op.arguments().first().unwrap().name.as_ref();
+                        //     agent!(DEC(prog[?idx_prog], r{?register}))
+                        // }
+                        // "inc" => {
+                        //     let register = op.arguments().first().unwrap().name.as_ref();
+                        //     agent!(INC(prog[?idx_prog], r{?register}))
+                        // }
+                        opname @ "jz" => {
+                            let mut args = ins.arguments().iter();
+                            let register = match args.next()  {
+                                Some(Arg::Register(r)) => r.name.as_ref(),
+                                Some(arg) => panic!("invalid argument #1 for instruction `{}`: {:?}", opname, arg),
+                                None => panic!("missing argument for instruction `{}`"),
+                            };
+                            let label = match args.next()  {
+                                Some(Arg::Label(l)) => l.name.as_ref(),
+                                Some(arg) => panic!("invalid argument #2 for instruction `{}`: {:?}", opname, arg),
+                                None => panic!("missing argument for instruction `{}`"),
+                            };
+                            // assert!(labels.contains(label));
                             agent!(JZ(prog[?idx_prog], r{?register}, l{?label}))
                         }
+
+                        opname => panic!("unknown instruction `{}`", opname),
                     }
                 });
             }

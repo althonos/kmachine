@@ -1,15 +1,17 @@
 //! `asm` parser for the AT&T syntax.
 
 use std::collections::VecDeque;
+use std::str::FromStr;
 
 use ::pest::Parser;
 
-use super::AsmParser;
-use super::AsmProgram;
-use super::Label;
-use super::Line;
-use super::Op;
-use super::Register;
+use super::*;
+// use super::AsmParser;
+// use super::AsmProgram;
+// use super::Label;
+// use super::Line;
+// use super::Op;
+// use super::Register;
 
 #[derive(Parser)]
 #[grammar = "asm/att.pest"]
@@ -22,44 +24,35 @@ impl AsmParser for AttParser {
                 pairs
                     .into_iter()
                     .map(|pair| match pair.as_rule() {
-                        Rule::label => {
+                        Rule::labeldecl => {
                             let ident = pair.into_inner().next().unwrap().as_str();
                             Line::from(Label::new(ident.to_string()))
                         }
                         Rule::instruction => {
                             let mut inner = pair.into_inner();
-                            let opname = inner.next().unwrap().as_str();
+                            let op = inner.next().unwrap().as_str();
+                            let args = inner
+                                .flat_map(|p| p.into_inner().next())
+                                .map(|pair| match pair.as_rule() {
+                                    Rule::register => {
+                                        let name = pair.into_inner().next().unwrap();
+                                        Arg::Register(Register::new(name.as_str()))
+                                    }
+                                    Rule::literal => {
+                                        let repr = pair.into_inner().next().unwrap();
+                                        let val = usize::from_str(repr.as_str()).unwrap();
+                                        Arg::Literal(Literal::new(val))
+                                    }
+                                    Rule::label => {
+                                        let name = pair.into_inner().next().unwrap();
+                                        Arg::Label(Label::new(name.as_str()))
+                                    }
+                                    _ => unreachable!()
+                                })
+                                .collect();
 
-                            let mut args: VecDeque<_> = inner.map(|r| r.into_inner()).collect();
-                            let op = match opname {
-                                "inc" => {
-                                    let register = args.pop_front().unwrap().as_str();
-                                    Op::Inc(Register::new(register.to_string()))
-                                }
-                                "dec" => {
-                                    let register = args.pop_front().unwrap().as_str();
-                                    Op::Dec(Register::new(register.to_string()))
-                                }
-                                "jz" => {
-                                    let register = args.pop_front().unwrap().as_str();
-                                    let label = args.pop_front().unwrap().as_str();
-                                    Op::Jz(
-                                        Register::new(register.to_string()),
-                                        Label::new(label.to_string()),
-                                    )
-                                }
-                                "clr" => {
-                                    let register = args.pop_front().unwrap().as_str();
-                                    Op::Clr(Register::new(register.to_string()))
-                                }
-                                name => panic!("unknown instruction: {:?}", name),
-                            };
-
-                            if !args.is_empty() {
-                                panic!("unused arguments for instruction `{:?}`: {:?}", op, args);
-                            }
-
-                            Line::from(op)
+                            let ins = Instruction { op: op.into(), args };
+                            Line::from(ins)
                         }
                         _ => unreachable!(),
                     })
