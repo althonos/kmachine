@@ -1,5 +1,10 @@
 //!
 
+use std::fmt::Display;
+use std::fmt::Formatter;
+use std::fmt::Result as FmtResult;
+use std::fmt::Write;
+
 use std::ops::Deref;
 
 use super::Agent;
@@ -35,5 +40,20 @@ impl Deref for Pattern {
     type Target = Vec<Agent>;
     fn deref(&self) -> &Vec<Agent> {
         &self.agents
+    }
+}
+
+impl Display for Pattern {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        let mut agents = self.agents.iter().peekable();
+        while let Some(agent) = agents.next() {
+            agent.fmt(f)?;
+            if agents.peek().is_some() {
+                f.write_char(',')
+                    .and(f.write_char(if f.alternate() {'\n'} else {' '}))?;
+            }
+        }
+
+        Ok(())
     }
 }

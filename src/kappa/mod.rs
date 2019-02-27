@@ -4,8 +4,10 @@
 mod macros;
 
 mod agent;
+mod expression;
 mod init;
 mod link;
+mod obs;
 mod rule;
 mod site;
 mod pattern;
