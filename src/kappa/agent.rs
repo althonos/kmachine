@@ -5,6 +5,9 @@ use std::fmt::Write;
 
 use indexmap::IndexSet;
 
+use super::Site;
+
+/// A Kappa agent, e.g. `A()`.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Agent {
     pub name: String,
@@ -51,96 +54,39 @@ impl Display for Agent {
     }
 }
 
+/// A Kappa agent declaration, e.g. `%agent: A()`.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Site {
-    name: String,
-    states: IndexSet<String>,
-    links: IndexSet<Link>,
+pub struct AgentDecl {
+    agent: Agent,
 }
 
-impl Site {
-    pub fn new<S: Into<String>>(name: S) -> Self {
-        Self {
-            name: name.into(),
-            states: IndexSet::new(),
-            links: IndexSet::new(),
-        }
-    }
-
-    pub fn link(&mut self, link: Link) -> &mut Self {
-        self.links.insert(link);
-        self
-    }
-
-    pub fn linkable<A, S>(&mut self, agent: A, site: S) -> &mut Self
+impl AgentDecl {
+    pub fn new<A>(agent: A) -> Self
     where
-        A: Into<String>,
-        S: Into<String>,
+        A: Into<Agent>
     {
-        self.links.insert(Link::BoundTo {
-            agent: agent.into(),
-            site: site.into(),
-        });
-        self
+        Self { agent: agent.into() }
     }
 
-    pub fn state<S>(&mut self, state: S) -> &mut Self
-    where
-        S: Into<String>,
-    {
-        self.states.insert(state.into());
-        self
+    pub fn agent(&self) -> &Agent {
+        &self.agent
+    }
+
+    pub fn agent_mut(&mut self) -> &mut Agent {
+        &mut self.agent
     }
 }
 
-impl Display for Site {
+impl Display for AgentDecl {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
-        f.write_str(&self.name)?;
-        if !self.states.is_empty() {
-            let states = &mut self.states.iter().peekable();
-            f.write_char('{')?;
-            while let Some(ref state) = states.next() {
-                if states.peek().is_some() {
-                    write!(f, "{}, ", state)?;
-                } else {
-                    write!(f, "{}", state)?;
-                }
-            }
-            f.write_char('}')?;
-        }
-        if !self.links.is_empty() {
-            let links = &mut self.links.iter().peekable();
-            f.write_char('[')?;
-            while let Some(ref link) = links.next() {
-                if links.peek().is_some() {
-                    write!(f, "{}, ", link)?;
-                } else {
-                    write!(f, "{}", link)?;
-                }
-            }
-            f.write_char(']')?;
-        }
-        Ok(())
+        f.write_str("%agent: ")
+            .and(self.agent.fmt(f))
+            .and(f.write_char('\n'))
     }
 }
 
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub enum Link {
-    Unknown,
-    Free,
-    Numbered(usize),
-    Bound,
-    BoundTo { agent: String, site: String },
-}
-
-impl Display for Link {
-    fn fmt(&self, f: &mut Formatter) -> FmtResult {
-        match self {
-            Link::Unknown => f.write_char('#'),
-            Link::Free => f.write_char('.'),
-            Link::Numbered(n) => n.fmt(f),
-            Link::Bound => f.write_char('_'),
-            Link::BoundTo { site, agent } => write!(f, "{}.{}", site, agent),
-        }
+impl From<Agent> for AgentDecl {
+    fn from(agent: Agent) -> Self {
+        Self::new(agent)
     }
 }

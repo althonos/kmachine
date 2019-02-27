@@ -4,7 +4,10 @@
 mod macros;
 
 mod agent;
+mod init;
+mod link;
 mod rule;
+mod site;
 
 use std::fmt::Display;
 use std::fmt::Formatter;
@@ -12,34 +15,49 @@ use std::fmt::Result as FmtResult;
 use std::fmt::Write;
 
 pub use self::agent::Agent;
-pub use self::agent::Link;
-pub use self::agent::Site;
+pub use self::agent::AgentDecl;
+pub use self::link::Link;
+pub use self::site::Site;
+pub use self::init::Init;
 pub use self::rule::Rule;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct KappaProgram {
-    // vars: Vec<Var>,
-    agents: Vec<Agent>,
+    agents: Vec<AgentDecl>,
     rules: Vec<Rule>,
-    // init: Vec<Init>,
+    inits: Vec<Init>,
 }
 
 impl KappaProgram {
     pub fn new() -> Self {
         KappaProgram {
-            // vars: Vec::new(),
             agents: Vec::new(),
             rules: Vec::new(),
+            inits: Vec::new(),
         }
     }
 
-    pub fn agent(&mut self, agent: Agent) -> &mut Self {
-        self.agents.push(agent);
+    pub fn agent<A>(&mut self, agent: A) -> &mut Self
+    where
+        A: Into<AgentDecl>,
+    {
+        self.agents.push(agent.into());
         self
     }
 
-    pub fn rule(&mut self, rule: Rule) -> &mut Self {
-        self.rules.push(rule);
+    pub fn rule<R>(&mut self, rule: R) -> &mut Self
+    where
+        R: Into<Rule>,
+    {
+        self.rules.push(rule.into());
+        self
+    }
+
+    pub fn init<I>(&mut self, init: I) -> &mut Self
+    where
+        I: Into<Init>,
+    {
+        self.inits.push(init.into());
         self
     }
 }
@@ -48,25 +66,27 @@ impl Display for KappaProgram {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         // write agents
         for agent in self.agents.iter() {
-            f.write_str("%agent: ")?;
             agent.fmt(f)?;
+        }
+
+        if f.alternate() {
             f.write_char('\n')?;
         }
 
         // write rules
         for rule in self.rules.iter() {
-            if f.alternate() {
-                f.write_char('\n')?;
-            }
             rule.fmt(f)?;
+        }
+
+        if f.alternate() {
+            f.write_char('\n')?;
+        }
+
+        // write inits
+        for init in self.inits.iter() {
+            init.fmt(f)?;
         }
 
         Ok(())
     }
 }
-
-// #[derive(Clone, Debug, Eq, PartialEq)]
-// pub struct Var {
-//     pub name: String,
-//     pub value: u64,
-// }

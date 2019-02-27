@@ -5,6 +5,9 @@ use std::fmt::Write;
 
 use super::agent::Agent;
 
+/// A Kappa rule, e.g. `A(b[.]), B(a[.]) -> A(b[0]), B(a[0]) @ 0.5`.
+///
+/// *NB: only the arrow notation is supported.*
 #[derive(Clone, Debug, PartialEq)]
 pub struct Rule {
     name: Option<String>,
