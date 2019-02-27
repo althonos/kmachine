@@ -28,12 +28,23 @@ impl Agent {
 impl Display for Agent {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         write!(f, "{}(", self.name)?;
+        if f.alternate() {
+            f.write_char('\n')?;
+        }
         let sites = &mut self.sites.iter().peekable();
         while let Some(ref site) = sites.next() {
-            if sites.peek().is_some() {
-                write!(f, "{}, ", site)?;
+            if f.alternate() {
+                write!(f, "    {}", site)?;
             } else {
                 write!(f, "{}", site)?;
+            }
+            if sites.peek().is_some() {
+                f.write_char(',')?;
+            }
+            if f.alternate() {
+                f.write_char('\n')?;
+            } else if sites.peek().is_some() {
+                f.write_char(' ')?;
             }
         }
         f.write_str(")")

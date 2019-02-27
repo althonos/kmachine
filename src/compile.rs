@@ -135,13 +135,14 @@ pub mod agents {
         let mut site;
         let mut agent = agent!(JZ(prog[ins.PROG]));
 
-        // Add one state to the r site for each register
+        // Add one state to the `r` site for each register
         site = site!(r);
         for register in registers.into_iter() {
             site.state(register.as_ref());
         }
         agent.site(site);
 
+        // Add one state to the `l` site for each label
         site = site!(l);
         for label in labels.into_iter() {
             site.state(label.as_ref());

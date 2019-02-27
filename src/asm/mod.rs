@@ -6,6 +6,7 @@ use std::borrow::Cow;
 use std::borrow::ToOwned;
 use std::iter::FromIterator;
 
+/// A register, e.g. `%rax`.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Register<'a> {
     pub name: Cow<'a, str>,
@@ -20,6 +21,7 @@ impl<'a> Register<'a> {
     }
 }
 
+/// A label in the program, e.g. `start:`.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Label<'a> {
     pub name: Cow<'a, str>,
@@ -34,6 +36,7 @@ impl<'a> Label<'a> {
     }
 }
 
+/// An operand with its arguments, e.g. `jnz %rax, start`
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Op<'a> {
     Inc(Register<'a>),
@@ -41,6 +44,7 @@ pub enum Op<'a> {
     Jz(Register<'a>, Label<'a>),
 }
 
+/// A program line.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Line<'a> {
     LabelLine(Label<'a>),
@@ -59,6 +63,7 @@ impl<'a> From<Op<'a>> for Line<'a> {
     }
 }
 
+/// The abstract syntax tree of an abstract assembler program.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct AsmProgram<'a> {
     lines: Vec<Line<'a>>,
@@ -89,6 +94,7 @@ impl<'a> FromIterator<Line<'a>> for AsmProgram<'a> {
     }
 }
 
+/// Parse a string into the corresponding abstract syntax tree.
 pub trait AsmParser {
     fn parse_asm<'a>(s: &'a str) -> AsmProgram<'a>;
 }
