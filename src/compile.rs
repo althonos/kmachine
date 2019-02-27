@@ -192,8 +192,10 @@ pub mod rules {
     }
 
     pub fn bind(label: &str) -> Rule {
+        let name = format!("bind | target == {0}", label);
+
         rule!(
-            "bind" {
+            ?name {
                 MACHINE(ip[.], state{jmp}, target{?label}),
                 PROG(cm[.], ins[0]),
                 LBL(prog[0], l{?label})
