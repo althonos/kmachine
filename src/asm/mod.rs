@@ -6,6 +6,8 @@ use std::borrow::Cow;
 use std::borrow::ToOwned;
 use std::iter::FromIterator;
 
+use indexmap::IndexSet;
+
 /// A register, e.g. `%rax`.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Register<'a> {
@@ -71,8 +73,56 @@ pub struct AsmProgram<'a> {
 }
 
 impl<'a> AsmProgram<'a> {
+
+    /// Create a new empty program.
     pub fn new() -> Self {
         Self { lines: Vec::new() }
+    }
+
+    /// Get the set of all registers *used* in the program.
+    pub fn registers(&self) -> IndexSet<&Register<'a>> {
+        self
+            .lines()
+            .into_iter()
+            .flat_map(|ref line| match line {
+                Line::LabelLine(_) => None,
+                Line::OpLine(op) => match op {
+                    Op::Clr(r) => Some(r),
+                    Op::Inc(r) => Some(r),
+                    Op::Dec(r) => Some(r),
+                    Op::Jz(r, _) => Some(r),
+                },
+            })
+            .collect()
+    }
+
+    /// Get the set of all labels *declared* in the program.
+    ///
+    /// This does not include labels that are used as arguments to jumping
+    /// instructions such as `jz`.
+    ///
+    /// ## Example
+    /// ```rust
+    /// # use kappamachine::asm::{AttParser, AsmProgram, Label};
+    /// let program: AsmProgram = AttParser.parse_asm(
+    ///     """
+    ///     label1:
+    ///         inc %rax
+    ///         jz  %rax, label2
+    ///     """
+    /// );
+    ///
+    /// assert_eq!(program.labels(), indexset!{Label::new("label1")}));
+    /// ```
+    pub fn labels(&self) -> IndexSet<&Label<'a>> {
+        self
+            .lines()
+            .into_iter()
+            .flat_map(|ref line| match line {
+                Line::LabelLine(l) => Some(l),
+                _ => None,
+            })
+            .collect()
     }
 
     pub fn lines(&self) -> &Vec<Line<'a>> {

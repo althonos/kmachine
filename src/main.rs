@@ -37,27 +37,16 @@ fn main() {
 
         // Collect all registers used in the program.
         let registers: IndexSet<_> = asm
-            .lines()
+            .registers()
             .into_iter()
-            .flat_map(|ref line| match line {
-                Line::LabelLine(_) => None,
-                Line::OpLine(op) => match op {
-                    Op::Clr(r) => Some(&r.name),
-                    Op::Inc(r) => Some(&r.name),
-                    Op::Dec(r) => Some(&r.name),
-                    Op::Jz(r, _) => Some(&r.name),
-                },
-            })
+            .map(|r| &r.name)
             .collect();
 
         // Collect all labels declared in the program.
         let labels: IndexSet<_> = asm
-            .lines()
+            .labels()
             .into_iter()
-            .flat_map(|line| match line {
-                Line::LabelLine(l) => Some(&l.name),
-                Line::OpLine(_) => None,
-            })
+            .map(|r| &l.name)
             .collect();
 
         // Compile the CM program into a Kappa source

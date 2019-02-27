@@ -30,7 +30,7 @@ cpy2:   ; move %rcx back into %rax
 |    `clr`    |     ✓     |          |
 |    `inc`    |     ✓     |          |
 |    `dec`    |     ✓     |          |
-|    `jnz`    |     ✓     |          |
+|    `jz`     |     ✓     |          |
 
 
 ## About
