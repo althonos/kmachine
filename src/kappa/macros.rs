@@ -1,26 +1,19 @@
 //! Quasi-quoting macros emulating the Kappa syntax.
 
 macro_rules! rule {
+    // 'rule' {} => {}
     ($name:literal $left:tt => $right:tt @ $rate:expr) => ({
         let mut rule = $crate::kappa::Rule::with_name($name, $rate);
         __rule_impl_slots!(rule, $left => $right);
         rule
     });
+    // ?rule {} => {}
     (? $name:ident $left:tt => $right:tt @ $rate:expr) => ({
         let mut rule = $crate::kappa::Rule::with_name($name, $rate);
         __rule_impl_slots!(rule, $left => $right);
         rule
     });
-    ($left:tt => $right:tt @ $rate:expr) => ({
-        let mut rule = $crate::kappa::Rule::new($rate);
-        __rule_impl_slots!(rule, $left => $right);
-        rule
-    });
-    (? $name:ident $left:tt => $right:tt @ $rate:expr) => ({
-        let mut rule = $crate::kappa::Rule::with_name($name, $rate);
-        __rule_impl_slots!(rule, $left => $right);
-        rule
-    });
+    // {} => {}
     ($left:tt => $right:tt @ $rate:expr) => ({
         let mut rule = $crate::kappa::Rule::new($rate);
         __rule_impl_slots!(rule, $left => $right);
@@ -29,24 +22,26 @@ macro_rules! rule {
 }
 
 macro_rules! __rule_impl_slots {
-    // no agent
+    // {} => {}
     ($rule:ident, {} => {}) => ();
-    // multiple agents
+    // {A(...), ...} => {A(...), ...}
     ($rule:ident, { $l:ident ($($largs:tt)*), $($lrest:tt)* } => {  $r:ident ($($rargs:tt)*), $($rrest:tt)* }) => ({
         __rule_impl_slots!($rule, { $l ($($largs)*) } =>  { $r ($($rargs)*) });
         __rule_impl_slots!($rule, { $($lrest)* } => { $($rrest)* });
     });
-    // single agents
+    // {A(...)} => {A(...)}
     ($rule:ident, { $l:ident ($($largs:tt)*) } => { $r:ident ($($rargs:tt)*) } ) => ({
         $rule.slot(agent!($l($($largs)*)), agent!($r($($rargs)*)))
     });
-    // allow dangling comma
+    // {A(...),} => {A(...)}
     ($rule:ident, { $l:ident ($($largs:tt)*), } => { $r:ident ($($rargs:tt)*) } ) => ({
         __rule_impl_slots!( $rule, { $l ($($largs)*) } => { $r ($($rargs)*) });
     });
+    // {A(...)} => {A(...),}
     ($rule:ident, { $l:ident ($($largs:tt)*) } => { $r:ident ($($rargs:tt)*), } ) => ({
         __rule_impl_slots!( $rule, { $l ($($largs)*) } => { $r ($($rargs)*) });
     });
+    // {A(...),} => {A(...),}
     ($rule:ident, { $l:ident ($($largs:tt)*), } => { $r:ident ($($rargs:tt)*), } ) => ({
         __rule_impl_slots!( $rule, { $l ($($largs)*) } => { $r ($($rargs)*) });
     });
@@ -54,7 +49,6 @@ macro_rules! __rule_impl_slots {
 
 #[allow(unused)]
 macro_rules! agent {
-
     // A()
     ($name:ident()) => ({
         $crate::kappa::Agent::new(stringify!($name))
@@ -65,27 +59,27 @@ macro_rules! agent {
         __agent_impl_sites!(agent,  $($sites)*);
         agent
     });
-
-    ($name:ident($site:ident { $($states:tt)* } )) => ({
+    // A(x{...})
+    ($name:ident( $site:ident { $($states:tt)* } )) => ({
         let mut agent = agent!($name());
         agent.site(site!($site {$($states)*}));
         agent
     });
-
+    // A(x[...])
     ($name:ident($site:ident [$($links:tt)*] )) => ({
         let mut agent = agent!($name());
         agent.site(site!($site [$($links)*]));
         agent
     });
-
+    // A(x{...}, ...)
     ($name:ident($site:ident {$($states:ident),*}, $($rest:tt)* )) => ({
         agent!($name($site {$($states),*} [], $($rest)* ))
     });
-
+    // A(x[...], ...)
     ($name:ident($site:ident [$($links:tt)*], $($rest:tt)* )) => ({
         agent!($name($site {} [$($links)*], $($rest)* ))
     });
-
+    // A(x{...}[...], ...)
     ($name:ident($site:ident {$($states:ident),*} [$($links:tt)*], $($rest:tt)* )) => ({
         let mut agent = agent!($name());
         agent.site(site!($site {$($states),*} [$($links)*]));
@@ -96,28 +90,28 @@ macro_rules! agent {
 
 #[doc(hidden)]
 macro_rules! __agent_impl_sites {
-
+    // (?) r
     ($agent:ident, $name:ident) => ({
         $agent.site(site!($name));
     });
     ($agent:ident, ? $name:ident) => ({
         $agent.site(site!(? $name));
     });
-
+    // (?) r[...]
     ($agent:ident, $name:ident [$($link:tt)*]) => ({
         $agent.site(site!($name [$($link)*]));
     });
     ($agent:ident, ? $name:ident [$($link:tt)*]) => ({
         $agent.site(site!(? $name [$($link)*]));
     });
-
+    // (?) r{...}
     ($agent:ident, $name:ident {$($states:tt)*}) => ({
         $agent.site(site!($name {$($states)*}));
     });
     ($agent:ident, ? $name:ident {$($states:tt)*}) => ({
         $agent.site(site!(? $name {$($states)*}));
     });
-
+    // (?) r[...], ...
     ($agent:ident, $name:ident [$($link:tt)*], $($rest:tt)*) => ({
         $agent.site(site!($name [$($link)*]));
         __agent_impl_sites!($agent, $($rest)*);
@@ -126,7 +120,7 @@ macro_rules! __agent_impl_sites {
         $agent.site(site!(? $name [$($link)*]));
         __agent_impl_sites!($agent, $($rest)*);
     });
-
+    // (?) r{...}, ...
     ($agent:ident, $name:ident {$($states:tt)*}, $($rest:tt)*) => ({
         $agent.site(site!($name {$($states)*}));
         __agent_impl_sites!($agent, $($rest)*);
@@ -135,7 +129,7 @@ macro_rules! __agent_impl_sites {
         $agent.site(site!(? $name {$($states)*}));
         __agent_impl_sites!($agent, $($rest)*);
     });
-
+    // (?) r{...}[...], ...
     ($agent:ident, $name:ident {$($states:tt)*} [$($link:tt)*], $($rest:tt)*) => ({
         $agent.site(site!($name [$($link)*]));
         __agent_impl_sites!($agent, $($rest)*);
@@ -148,18 +142,15 @@ macro_rules! __agent_impl_sites {
 
 #[allow(unused)]
 macro_rules! site {
-
+    // (?) r
     ($name:ident) => ($crate::kappa::Site::new(stringify!($name)));
     (? $name:ident) => ($crate::kappa::Site::new($name));
-
     // (?) r{...}
     ($name:ident {$($states:tt)*}) => ( site!($name { $($states)* } []) );
     (? $name:ident {$($states:tt)*}) => ( site!(? $name { $($states)* } []) );
-
     // (?) r[...]
     ($name:ident [$($link:tt)*]) => ( site!($name {} [$($link)*]) );
     (? $name:ident [$($link:tt)*]) => ( site!(? $name {} [$($link)*]) );
-
     // (?) r{...}[...]
     ($name:ident {$($states:tt)*} [$($link:tt)*]) => ({
         let mut site = site!($name);
