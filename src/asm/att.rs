@@ -5,13 +5,14 @@ use std::str::FromStr;
 
 use ::pest::Parser;
 
-use super::*;
-// use super::AsmParser;
-// use super::AsmProgram;
-// use super::Label;
-// use super::Line;
-// use super::Op;
-// use super::Register;
+use super::AsmParser;
+use super::AsmProgram;
+use super::Arg;
+use super::Label;
+use super::Instruction;
+use super::Line;
+use super::Literal;
+use super::Register;
 
 #[derive(Parser)]
 #[grammar = "asm/att.pest"]

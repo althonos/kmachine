@@ -8,6 +8,7 @@ mod init;
 mod link;
 mod rule;
 mod site;
+mod pattern;
 
 use std::fmt::Display;
 use std::fmt::Formatter;

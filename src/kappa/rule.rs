@@ -4,6 +4,7 @@ use std::fmt::Result as FmtResult;
 use std::fmt::Write;
 
 use super::agent::Agent;
+use super::pattern::Pattern;
 
 /// A Kappa rule, e.g. `A(b[.]), B(a[.]) -> A(b[0]), B(a[0]) @ 0.5`.
 ///
@@ -11,8 +12,8 @@ use super::agent::Agent;
 #[derive(Clone, Debug, PartialEq)]
 pub struct Rule {
     name: Option<String>,
-    left: Vec<Agent>,
-    right: Vec<Agent>,
+    left: Pattern,
+    right: Pattern,
     rate: f64,
 }
 
@@ -20,8 +21,8 @@ impl Rule {
     pub fn new(rate: f64) -> Self {
         Rule {
             name: None,
-            left: Vec::new(),
-            right: Vec::new(),
+            left: Pattern::new(),
+            right: Pattern::new(),
             rate,
         }
     }
@@ -36,8 +37,8 @@ impl Rule {
     }
 
     pub fn slot(&mut self, left: Agent, right: Agent) -> &mut Self {
-        self.left.push(left);
-        self.right.push(right);
+        self.left.agent(left);
+        self.right.agent(right);
         self
     }
 }

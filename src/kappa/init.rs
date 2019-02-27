@@ -4,12 +4,13 @@ use std::fmt::Result as FmtResult;
 use std::fmt::Write;
 
 use super::agent::Agent;
+use super::pattern::Pattern;
 
 /// A Kappa initial mixture declaration, e.g. `%init: 1 A()`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Init {
     count: usize,
-    mixture: Vec<Agent>,
+    mixture: Pattern,
 }
 
 impl Init {
@@ -17,7 +18,7 @@ impl Init {
     pub fn new(count: usize) -> Self {
         Self {
             count,
-            mixture: Vec::new(),
+            mixture: Pattern::new(),
         }
     }
 
@@ -36,7 +37,7 @@ impl Init {
     where
         A: Into<Agent>,
     {
-        self.mixture.push(agent.into());
+        self.mixture.agent(agent);
         self
     }
 }
