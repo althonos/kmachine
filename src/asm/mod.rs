@@ -58,7 +58,6 @@ pub struct Instruction<'a> {
 }
 
 impl<'a> Instruction<'a> {
-
     pub fn new<O>(op: O) -> Self
     where
         O: Into<Cow<'a, str>>,
@@ -150,7 +149,6 @@ pub struct AsmProgram<'a> {
 }
 
 impl<'a> AsmProgram<'a> {
-
     /// Create a new empty program.
     pub fn new() -> Self {
         Self { lines: Vec::new() }
@@ -158,19 +156,16 @@ impl<'a> AsmProgram<'a> {
 
     /// Get the set of all registers *used* in the program.
     pub fn registers(&self) -> IndexSet<&Register<'a>> {
-        self
-            .lines()
+        self.lines()
             .into_iter()
             .flat_map(|ref line| match line {
                 Line::LabelLine(_) => None,
                 Line::OpLine(ins) => match ins.op() {
-                    "clr" | "dec" | "inc" | "jz" => {
-                        match ins.arguments().first() {
-                            Some(Arg::Register(r)) => Some(r),
-                            _ => None
-                        }
-                    }
-                    _ => None
+                    "clr" | "dec" | "inc" | "jz" => match ins.arguments().first() {
+                        Some(Arg::Register(r)) => Some(r),
+                        _ => None,
+                    },
+                    _ => None,
                 },
             })
             .collect()
@@ -195,8 +190,7 @@ impl<'a> AsmProgram<'a> {
     /// assert_eq!(program.labels(), indexset!{Label::new("label1")}));
     /// ```
     pub fn labels(&self) -> IndexSet<&Label<'a>> {
-        self
-            .lines()
+        self.lines()
             .into_iter()
             .flat_map(|ref line| match line {
                 Line::LabelLine(l) => Some(l),

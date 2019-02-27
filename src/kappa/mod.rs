@@ -16,10 +16,10 @@ use std::fmt::Write;
 
 pub use self::agent::Agent;
 pub use self::agent::AgentDecl;
-pub use self::link::Link;
-pub use self::site::Site;
 pub use self::init::Init;
+pub use self::link::Link;
 pub use self::rule::Rule;
+pub use self::site::Site;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct KappaProgram {

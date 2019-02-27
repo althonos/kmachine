@@ -15,7 +15,10 @@ pub struct Init {
 impl Init {
     /// Create a new initial declaration.
     pub fn new(count: usize) -> Self {
-        Self { count, mixture: Vec::new() }
+        Self {
+            count,
+            mixture: Vec::new(),
+        }
     }
 
     /// Create a new initial declaration with a single agent.
@@ -47,7 +50,7 @@ impl Display for Init {
             agent.fmt(f)?;
             if agents.peek().is_some() {
                 f.write_char(',')?;
-                f.write_char(if f.alternate() {'\n'} else {' '})?;
+                f.write_char(if f.alternate() { '\n' } else { ' ' })?;
             }
         }
 

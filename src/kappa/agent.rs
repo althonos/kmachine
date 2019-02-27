@@ -63,9 +63,11 @@ pub struct AgentDecl {
 impl AgentDecl {
     pub fn new<A>(agent: A) -> Self
     where
-        A: Into<Agent>
+        A: Into<Agent>,
     {
-        Self { agent: agent.into() }
+        Self {
+            agent: agent.into(),
+        }
     }
 
     pub fn agent(&self) -> &Agent {

@@ -30,7 +30,7 @@ impl AsmParser for AttParser {
                         }
                         Rule::instruction => {
                             let mut inner = pair.into_inner();
-                            let op = inner.next().unwrap().as_str();
+                            let opname = inner.next().unwrap().as_str();
                             let args = inner
                                 .flat_map(|p| p.into_inner().next())
                                 .map(|pair| match pair.as_rule() {
@@ -47,12 +47,9 @@ impl AsmParser for AttParser {
                                         let name = pair.into_inner().next().unwrap();
                                         Arg::Label(Label::new(name.as_str()))
                                     }
-                                    _ => unreachable!()
-                                })
-                                .collect();
-
-                            let ins = Instruction { op: op.into(), args };
-                            Line::from(ins)
+                                    _ => unreachable!(),
+                                });
+                            Line::from(Instruction::with_args(opname, args))
                         }
                         _ => unreachable!(),
                     })

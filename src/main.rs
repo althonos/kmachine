@@ -17,15 +17,15 @@ use std::io::Read;
 use indexmap::IndexSet;
 
 use self::asm::att::AttParser;
-use self::asm::AsmParser;
 use self::asm::Arg;
+use self::asm::AsmParser;
 use self::asm::Label;
 use self::asm::Line;
 use self::asm::Register;
 use self::kappa::Agent;
+use self::kappa::Init;
 use self::kappa::KappaProgram;
 use self::kappa::Site;
-use self::kappa::Init;
 
 fn main() {
     for filename in std::env::args().skip(1) {
@@ -37,18 +37,10 @@ fn main() {
         let asm = AttParser::parse_asm(&program);
 
         // Collect all registers used in the program.
-        let registers: IndexSet<&Cow<_>> = asm
-            .registers()
-            .into_iter()
-            .map(|r| &r.name)
-            .collect();
+        let registers: IndexSet<&Cow<_>> = asm.registers().into_iter().map(|r| &r.name).collect();
 
         // Collect all labels declared in the program.
-        let labels: IndexSet<&Cow<_>> = asm
-            .labels()
-            .into_iter()
-            .map(|l| &l.name)
-            .collect();
+        let labels: IndexSet<&Cow<_>> = asm.labels().into_iter().map(|l| &l.name).collect();
 
         // Compile the CM program into a Kappa source
         let program = {
@@ -88,8 +80,7 @@ fn main() {
             }
             // Build label-dependent rules
             for label in labels.iter() {
-                program
-                    .rule(compile::rules::bind(label));
+                program.rule(compile::rules::bind(label));
             }
             // Build label-register-dependent rules
             for label in labels.iter() {
@@ -98,18 +89,18 @@ fn main() {
                 }
             }
 
-
             // Build static init
-            program
-                .init(Init::with_agent(1, agent!(UNIT(prev[.], next[.], r{_none}))));
+            program.init(Init::with_agent(
+                1,
+                agent!(UNIT(prev[.], next[.], r{_none})),
+            ));
             // Build program polymer
             let mut program_chain = Init::new(1);
-            program_chain.agent(agent!(MACHINE(state{run}, ip[0])));
+            program_chain.agent(agent!(MACHINE(state { run }, ip[0])));
             let mut lines = asm.lines().iter().enumerate().peekable();
             while let Some((index, line)) = lines.next() {
-
                 //
-                let idx_prev = index*2;
+                let idx_prev = index * 2;
                 let idx_prog = idx_prev + 1;
                 let idx_next = idx_prev + 2;
 
@@ -121,7 +112,6 @@ fn main() {
                     agent!(PROG( prev[?idx_prev], ins[?idx_prog], next[?idx_next]))
                 });
 
-
                 program_chain.agent(match line {
                     Line::LabelLine(l) => {
                         let label = l.name.as_ref();
@@ -130,9 +120,12 @@ fn main() {
                     Line::OpLine(ins) => match ins.op() {
                         opname @ "clr" | opname @ "inc" | opname @ "dec" => {
                             let name = opname.to_uppercase();
-                            let register = match ins.arguments().first()  {
+                            let register = match ins.arguments().first() {
                                 Some(Arg::Register(r)) => r.name.as_ref(),
-                                Some(arg) => panic!("invalid argument #1 for instruction `{}`: {:?}", opname, arg),
+                                Some(arg) => panic!(
+                                    "invalid argument #1 for instruction `{}`: {:?}",
+                                    opname, arg
+                                ),
                                 None => panic!("missing argument for instruction `{}`"),
                             };
                             agent!(CLR(prog[?idx_prog], r{?register}))
@@ -147,14 +140,20 @@ fn main() {
                         // }
                         opname @ "jz" => {
                             let mut args = ins.arguments().iter();
-                            let register = match args.next()  {
+                            let register = match args.next() {
                                 Some(Arg::Register(r)) => r.name.as_ref(),
-                                Some(arg) => panic!("invalid argument #1 for instruction `{}`: {:?}", opname, arg),
+                                Some(arg) => panic!(
+                                    "invalid argument #1 for instruction `{}`: {:?}",
+                                    opname, arg
+                                ),
                                 None => panic!("missing argument for instruction `{}`"),
                             };
-                            let label = match args.next()  {
+                            let label = match args.next() {
                                 Some(Arg::Label(l)) => l.name.as_ref(),
-                                Some(arg) => panic!("invalid argument #2 for instruction `{}`: {:?}", opname, arg),
+                                Some(arg) => panic!(
+                                    "invalid argument #2 for instruction `{}`: {:?}",
+                                    opname, arg
+                                ),
                                 None => panic!("missing argument for instruction `{}`"),
                             };
                             // assert!(labels.contains(label));
@@ -162,7 +161,7 @@ fn main() {
                         }
 
                         opname => panic!("unknown instruction `{}`", opname),
-                    }
+                    },
                 });
             }
             program.init(program_chain);
