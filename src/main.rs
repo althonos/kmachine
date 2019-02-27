@@ -26,6 +26,9 @@ use self::kappa::Agent;
 use self::kappa::Init;
 use self::kappa::KappaProgram;
 use self::kappa::Site;
+use self::kappa::Observable;
+use self::kappa::Pattern;
+use self::kappa::AlgebraicExpression;
 
 fn main() {
     for filename in std::env::args().skip(1) {
@@ -165,6 +168,18 @@ fn main() {
                 });
             }
             program.init(program_chain);
+
+
+            // Build observables
+            for register in registers.iter() {
+                let r: &str = register.as_ref();
+                let pattern = Pattern::from(vec![agent!(UNIT(r{?r}))]);
+                let obs = Observable::new(
+                    r,
+                    AlgebraicExpression::Occurrences(pattern)
+                );
+                program.observable(obs);
+            }
 
             program
         };

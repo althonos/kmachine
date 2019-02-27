@@ -23,12 +23,16 @@ pub use self::init::Init;
 pub use self::link::Link;
 pub use self::rule::Rule;
 pub use self::site::Site;
+pub use self::obs::Observable;
+pub use self::pattern::Pattern;
+pub use self::expression::AlgebraicExpression;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct KappaProgram {
     agents: Vec<AgentDecl>,
     rules: Vec<Rule>,
     inits: Vec<Init>,
+    obs: Vec<Observable>,
 }
 
 impl KappaProgram {
@@ -37,6 +41,7 @@ impl KappaProgram {
             agents: Vec::new(),
             rules: Vec::new(),
             inits: Vec::new(),
+            obs: Vec::new(),
         }
     }
 
@@ -48,6 +53,22 @@ impl KappaProgram {
         self
     }
 
+    pub fn init<I>(&mut self, init: I) -> &mut Self
+    where
+        I: Into<Init>,
+    {
+        self.inits.push(init.into());
+        self
+    }
+
+    pub fn observable<O>(&mut self, observable: O) -> &mut Self
+    where
+        O: Into<Observable>,
+    {
+        self.obs.push(observable.into());
+        self
+    }
+
     pub fn rule<R>(&mut self, rule: R) -> &mut Self
     where
         R: Into<Rule>,
@@ -56,13 +77,7 @@ impl KappaProgram {
         self
     }
 
-    pub fn init<I>(&mut self, init: I) -> &mut Self
-    where
-        I: Into<Init>,
-    {
-        self.inits.push(init.into());
-        self
-    }
+
 }
 
 impl Display for KappaProgram {
@@ -88,6 +103,15 @@ impl Display for KappaProgram {
         // write inits
         for init in self.inits.iter() {
             init.fmt(f)?;
+        }
+
+        if f.alternate() {
+            f.write_char('\n')?;
+        }
+
+        // write observables
+        for obs in self.obs.iter() {
+            obs.fmt(f)?;
         }
 
         Ok(())

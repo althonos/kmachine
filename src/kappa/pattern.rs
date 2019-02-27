@@ -57,3 +57,9 @@ impl Display for Pattern {
         Ok(())
     }
 }
+
+impl From<Vec<Agent>> for Pattern {
+    fn from(agents: Vec<Agent>) -> Self {
+        Self { agents }
+    }
+}
