@@ -11,17 +11,18 @@ pub mod agents {
 
     use super::*;
 
-    pub fn unit<'a, I>(registers: I) -> Agent
+    pub fn unit<R, SR>(registers: R) -> Agent
     where
-        I: IntoIterator<Item = &'a &'a Register>,
+        R: IntoIterator<Item = SR>,
+        SR: AsRef<str>,
     {
         let mut agent = agent!(UNIT(next[prev.UNIT]));
 
         let mut site_prev = site!(prev[next.UNIT]);
         let mut site_r = site!(r { _none });
         for register in registers.into_iter() {
-            site_r.state(register.name.as_str());
-            site_prev.linkable("MACHINE", register.name.as_str());
+            site_r.state(register.as_ref());
+            site_prev.linkable("MACHINE", register.as_ref());
         }
 
         agent.site(site_prev);
@@ -40,33 +41,36 @@ pub mod agents {
         )
     }
 
-    pub fn machine<'a, I, L>(registers: I, labels: L) -> Agent
+    pub fn machine<R, SR, L, SL>(registers: R, labels: L) -> Agent
     where
-        I: IntoIterator<Item = &'a &'a Register>,
-        L: IntoIterator<Item = &'a &'a Label>,
+        R: IntoIterator<Item = SR>,
+        L: IntoIterator<Item = SL>,
+        SR: AsRef<str>,
+        SL: AsRef<str>,
     {
         // Agent with baseline sites
         let mut site;
         let mut agent = agent!(MACHINE(ip[cm.PROG], state { run, mov, jmp }));
         // Add one site for each register
         for register in registers.into_iter() {
-            site = Site::new(register.name.as_str());
+            site = Site::new(register.as_ref());
             site.linkable("UNIT", "prev");
             agent.site(site);
         }
         // Add one state for each
         site = site!(target { _none });
         for label in labels.into_iter() {
-            site.state(label.name.as_str());
+            site.state(label.as_ref());
         }
         agent.site(site);
 
         agent
     }
 
-    pub fn lbl<'a, L>(labels: L) -> Agent
+    pub fn lbl<L, SL>(labels: L) -> Agent
     where
-        L: IntoIterator<Item = &'a &'a Label>,
+        L: IntoIterator<Item = SL>,
+        SL: AsRef<str>,
     {
         // Agent with baseline sites
         let mut site;
@@ -75,16 +79,17 @@ pub mod agents {
         // Add one state to the l site for each label
         site = site!(l);
         for label in labels.into_iter() {
-            site.state(label.name.to_string());
+            site.state(label.as_ref());
         }
         agent.site(site);
 
         agent
     }
 
-    pub fn inc<'a, I>(registers: I) -> Agent
+    pub fn inc<R, SR>(registers: R) -> Agent
     where
-        I: IntoIterator<Item = &'a &'a Register>,
+        R: IntoIterator<Item = SR>,
+        SR: AsRef<str>,
     {
         // Agent with baseline sites
         let mut site;
@@ -93,16 +98,17 @@ pub mod agents {
         // Add one state to the r site for each register
         site = site!(r);
         for register in registers.into_iter() {
-            site.state(register.name.to_string());
+            site.state(register.as_ref());
         }
         agent.site(site);
 
         agent
     }
 
-    pub fn dec<'a, I>(registers: I) -> Agent
+    pub fn dec<R, SR>(registers: R) -> Agent
     where
-        I: IntoIterator<Item = &'a &'a Register>,
+        R: IntoIterator<Item = SR>,
+        SR: AsRef<str>,
     {
         // Agent with baseline sites
         let mut site;
@@ -111,17 +117,19 @@ pub mod agents {
         // Add one state to the r site for each register
         site = site!(r);
         for register in registers.into_iter() {
-            site.state(register.name.to_string());
+            site.state(register.as_ref());
         }
         agent.site(site);
 
         agent
     }
 
-    pub fn jz<'a, I, L>(registers: I, labels: L) -> Agent
+    pub fn jz<R, SR, L, SL>(registers: R, labels: L) -> Agent
     where
-        I: IntoIterator<Item = &'a &'a Register>,
-        L: IntoIterator<Item = &'a &'a Label>,
+        R: IntoIterator<Item = SR>,
+        L: IntoIterator<Item = SL>,
+        SR: AsRef<str>,
+        SL: AsRef<str>,
     {
         // Agent with baseline sites
         let mut site;
@@ -130,19 +138,18 @@ pub mod agents {
         // Add one state to the r site for each register
         site = site!(r);
         for register in registers.into_iter() {
-            site.state(register.name.to_string());
+            site.state(register.as_ref());
         }
         agent.site(site);
 
         site = site!(l);
         for label in labels.into_iter() {
-            site.state(label.name.to_string());
+            site.state(label.as_ref());
         }
         agent.site(site);
 
         agent
     }
-
 }
 
 pub mod rules {

@@ -36,23 +36,25 @@ fn main() {
         let asm = AttParser::parse_asm(&program);
 
         // Collect all registers used in the program.
-        let registers: IndexSet<&Register> = asm
-            .iter()
-            .flat_map(|line| match line {
+        let registers: IndexSet<_> = asm
+            .lines()
+            .into_iter()
+            .flat_map(|ref line| match line {
                 Line::LabelLine(_) => None,
                 Line::OpLine(op) => match op {
-                    Op::Inc(r) => Some(r),
-                    Op::Dec(r) => Some(r),
-                    Op::Jz(r, _) => Some(r),
+                    Op::Inc(r) => Some(&r.name),
+                    Op::Dec(r) => Some(&r.name),
+                    Op::Jz(r, _) => Some(&r.name),
                 },
             })
             .collect();
 
         // Collect all labels declared in the program.
-        let labels: IndexSet<&Label> = asm
-            .iter()
+        let labels: IndexSet<_> = asm
+            .lines()
+            .into_iter()
             .flat_map(|line| match line {
-                Line::LabelLine(l) => Some(l),
+                Line::LabelLine(l) => Some(&l.name),
                 Line::OpLine(_) => None,
             })
             .collect();
@@ -76,28 +78,27 @@ fn main() {
                 .agent(compile::agents::jz(&registers, &labels));
 
             // Build static rules
-            program.rule(compile::rules::mov())
+            program
+                .rule(compile::rules::mov())
                 .rule(compile::rules::lbl());
             // Build register-dependent rules
             for register in registers.iter() {
                 program
-                    .rule(compile::rules::inc_nonzero(&register.name))
-                    .rule(compile::rules::inc_zero(&register.name))
-                    .rule(compile::rules::dec_zero(&register.name))
-                    .rule(compile::rules::dec_one(&register.name))
-                    .rule(compile::rules::dec_more(&register.name))
-                    .rule(compile::rules::jz_nonzero(&register.name));
+                    .rule(compile::rules::inc_nonzero(register))
+                    .rule(compile::rules::inc_zero(register))
+                    .rule(compile::rules::dec_zero(register))
+                    .rule(compile::rules::dec_one(register))
+                    .rule(compile::rules::dec_more(register))
+                    .rule(compile::rules::jz_nonzero(register));
             }
             // Build label-dependent rules
             for label in labels.iter() {
-                program
-                    .rule(compile::rules::bind(&label.name));
+                program.rule(compile::rules::bind(label));
             }
             // Build label-register-dependent rules
             for label in labels.iter() {
                 for register in registers.iter() {
-                    program
-                        .rule(compile::rules::jz_zero(&register.name, &label.name));
+                    program.rule(compile::rules::jz_zero(register, label));
                 }
             }
 
