@@ -128,7 +128,7 @@ fn main() {
                                 ),
                                 None => panic!("missing argument for instruction `{}`"),
                             };
-                            agent!(CLR(prog[?idx_prog], r{?register}))
+                            agent!(?name (prog[?idx_prog], r{?register}))
                         }
                         // "dec" => {
                         //     let register = op.arguments().first().unwrap().name.as_ref();
@@ -146,7 +146,7 @@ fn main() {
                                     "invalid argument #1 for instruction `{}`: {:?}",
                                     opname, arg
                                 ),
-                                None => panic!("missing argument for instruction `{}`"),
+                                None => panic!("missing argument for instruction `{}`", opname),
                             };
                             let label = match args.next() {
                                 Some(Arg::Label(l)) => l.name.as_ref(),
@@ -154,9 +154,9 @@ fn main() {
                                     "invalid argument #2 for instruction `{}`: {:?}",
                                     opname, arg
                                 ),
-                                None => panic!("missing argument for instruction `{}`"),
+                                None => panic!("missing argument for instruction `{}`", opname),
                             };
-                            // assert!(labels.contains(label));
+                            assert!(labels.contains(&Cow::from(label)));
                             agent!(JZ(prog[?idx_prog], r{?register}, l{?label}))
                         }
 
