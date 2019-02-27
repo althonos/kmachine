@@ -195,6 +195,7 @@ macro_rules! __site_impl_links {
         $site.link(link!($other . $agent))
     );
     ($site:ident [$n:expr]) => ({$site.link(link!($n));});
+    ($site:ident [? $n:ident]) => ({$site.link(link!(? $n));});
     ($site:ident [#, $($link:tt)*]) => ({
         $site.link(link!(#));
         __site_impl_links!($site [$($link:tt)*])
@@ -209,6 +210,10 @@ macro_rules! __site_impl_links {
     });
     ($site:ident [$other:ident . $agent:ident, $($links:tt)*]) => ({
         $site.link(link!($other . $agent));
+        __site_impl_links!($site [$($links)*])
+    });
+    ($site:ident [? $n:ident, $($links:tt)*]) => ({
+        $site.link(link!(? $n));
         __site_impl_links!($site [$($links)*])
     });
     ($site:ident [$n:expr, $($links:tt)*]) => ({
@@ -235,6 +240,9 @@ macro_rules! link {
         }
     };
     ($site:expr) => {
+        $crate::kappa::Link::Numbered($site)
+    };
+    (? $site:ident) => {
         $crate::kappa::Link::Numbered($site)
     };
 }
