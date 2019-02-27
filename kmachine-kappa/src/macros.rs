@@ -22,7 +22,8 @@ macro_rules! rule {
     });
 }
 
-#[macro_export]
+#[macro_export(local_inner_macros)]
+#[doc(hidden)]
 macro_rules! __rule_impl_slots {
     // {} => {}
     ($rule:ident, {} => {}) => ();
@@ -120,7 +121,8 @@ macro_rules! agent {
     });
 }
 
-#[macro_export]
+#[macro_export(local_inner_macros)]
+#[doc(hidden)]
 macro_rules! __agent_impl_sites {
     // (?) r
     ($agent:ident, $name:ident) => ({
@@ -198,7 +200,8 @@ macro_rules! site {
     });
 }
 
-#[macro_export]
+#[macro_export(local_inner_macros)]
+#[doc(hidden)]
 macro_rules! __site_impl_states {
     ($site:ident {}) => ();
     ($site:ident {$state:ident}) => ({
@@ -217,7 +220,8 @@ macro_rules! __site_impl_states {
     });
 }
 
-#[macro_export]
+#[macro_export(local_inner_macros)]
+#[doc(hidden)]
 macro_rules! __site_impl_links {
     ($site:ident []) => ();
     ($site:ident [#]) => ({$site.link(link!(#));});
