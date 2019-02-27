@@ -8,7 +8,7 @@ register = _{ "%" ~ ident }
 
 label = { ident ~ ":" }
 
-op = @{ "inc" | "dec" | "jz" }
+op = @{ ASCII_ALPHA* }
 arg = { register | ident }
 
 instruction = { op ~ arg ~ ("," ~ arg)* }

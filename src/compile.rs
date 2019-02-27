@@ -36,7 +36,7 @@ pub mod agents {
                 prev[next.PROG],
                 next[prev.PROG],
                 cm[ip.MACHINE],
-                ins[prog.INC, prog.DEC, prog.JZ, prog.LBL]
+                ins[prog.INC, prog.DEC, prog.JZ, prog.LBL, prog.CLR]
             )
         )
     }
@@ -151,6 +151,26 @@ pub mod agents {
 
         agent
     }
+
+    pub fn clr<R, SR>(registers: R) -> Agent
+    where
+        R: IntoIterator<Item = SR>,
+        SR: AsRef<str>,
+    {
+        // Agent with baseline sites
+        let mut site;
+        let mut agent = agent!(CLR(prog[ins.PROG]));
+
+        // Add one state to the `r` site for each register
+        site = site!(r);
+        for register in registers.into_iter() {
+            site.state(register.as_ref());
+        }
+        agent.site(site);
+
+        agent
+    }
+
 }
 
 pub mod rules {
@@ -285,6 +305,60 @@ pub mod rules {
                 MACHINE(ip[0], state{mov}, ?reg[3]),
                 PROG(cm[0], ins[1]),
                 DEC(prog[1], r{?reg}),
+                UNIT(prev[.], next[.], r{_none}),
+                UNIT(prev[3]),
+            } @ 1.0
+        )
+    }
+
+    pub fn clr_zero(reg: &str) -> Rule {
+        let name = format!("clr({0}) | {0} == 0", reg);
+
+        rule!(
+            ?name {
+                MACHINE(ip[0], state{run}, ?reg[.]),
+                PROG(cm[0], ins[1]),
+                CLR(prog[1], r{?reg})
+            } => {
+                MACHINE(ip[0], state{mov}, ?reg[.]),
+                PROG(cm[0], ins[1]),
+                CLR(prog[1], r{?reg})
+            } @ 1.0
+        )
+    }
+
+    pub fn clr_one(reg: &str) -> Rule {
+        let name = format!("clr({0}) | {0} == 1", reg);
+
+        rule!(
+            ?name {
+                MACHINE(ip[0], state{run}, ?reg[2]),
+                PROG(cm[0], ins[1]),
+                CLR(prog[1], r{?reg}),
+                UNIT(prev[2], next[.], r{?reg}),
+            } => {
+                MACHINE(ip[0], state{mov}, ?reg[.]),
+                PROG(cm[0], ins[1]),
+                CLR(prog[1], r{?reg}),
+                UNIT(prev[.], next[.], r{_none}),
+            } @ 1.0
+        )
+    }
+
+    pub fn clr_more(reg: &str) -> Rule {
+        let name = format!("clr({0}) | {0} >= 2", reg);
+
+        rule!(
+            ?name {
+                MACHINE(ip[0], state{run}, ?reg[2]),
+                PROG(cm[0], ins[1]),
+                CLR(prog[1], r{?reg}),
+                UNIT(prev[2], next[3], r{?reg}),
+                UNIT(prev[3]),
+            } => {
+                MACHINE(ip[0], state{run}, ?reg[3]),
+                PROG(cm[0], ins[1]),
+                CLR(prog[1], r{?reg}),
                 UNIT(prev[.], next[.], r{_none}),
                 UNIT(prev[3]),
             } @ 1.0

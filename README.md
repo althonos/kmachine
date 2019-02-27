@@ -8,9 +8,8 @@ The syntax is heavily inspired by the AT&T syntax of the [GNU Assembler]. The fo
 program copies the content of register `%rax` to register `%rbx` using a temporary register `%rcx`:
 
 ```asm
-clr1:   ; empty content of %rcx
-        dec %rcx
-        jnz %rcx, clr1
+        ; clear content of %rcx
+        clr %rcx
 cpy1:   ; move %rax to both %rbx and %rcx
         inc %rcx
         inc %rbx
@@ -28,10 +27,10 @@ cpy2:   ; move %rcx back into %rax
 
 | Instruction | Supported | Emulated |
 | ----------- | --------- | -------- |
+|    `clr`    |     ✓     |          |
 |    `inc`    |     ✓     |          |
 |    `dec`    |     ✓     |          |
 |    `jnz`    |     ✓     |          |
-
 
 
 ## About

@@ -31,7 +31,6 @@ impl AsmParser for AttParser {
                             let opname = inner.next().unwrap().as_str();
 
                             let mut args: VecDeque<_> = inner.map(|r| r.into_inner()).collect();
-
                             let op = match opname {
                                 "inc" => {
                                     let register = args.pop_front().unwrap().as_str();
@@ -49,7 +48,11 @@ impl AsmParser for AttParser {
                                         Label::new(label.to_string()),
                                     )
                                 }
-                                _ => unimplemented!(),
+                                "clr" => {
+                                    let register = args.pop_front().unwrap().as_str();
+                                    Op::Clr(Register::new(register.to_string()))
+                                }
+                                name => panic!("unknown instruction: {:?}", name),
                             };
 
                             if !args.is_empty() {

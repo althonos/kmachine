@@ -39,8 +39,9 @@ impl<'a> Label<'a> {
 /// An operand with its arguments, e.g. `jnz %rax, start`
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Op<'a> {
-    Inc(Register<'a>),
     Dec(Register<'a>),
+    Clr(Register<'a>),
+    Inc(Register<'a>),
     Jz(Register<'a>, Label<'a>),
 }
 

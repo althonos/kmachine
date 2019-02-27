@@ -42,6 +42,7 @@ fn main() {
             .flat_map(|ref line| match line {
                 Line::LabelLine(_) => None,
                 Line::OpLine(op) => match op {
+                    Op::Clr(r) => Some(&r.name),
                     Op::Inc(r) => Some(&r.name),
                     Op::Dec(r) => Some(&r.name),
                     Op::Jz(r, _) => Some(&r.name),
@@ -89,7 +90,10 @@ fn main() {
                     .rule(compile::rules::dec_zero(register))
                     .rule(compile::rules::dec_one(register))
                     .rule(compile::rules::dec_more(register))
-                    .rule(compile::rules::jz_nonzero(register));
+                    .rule(compile::rules::jz_nonzero(register))
+                    .rule(compile::rules::clr_zero(register))
+                    .rule(compile::rules::clr_one(register))
+                    .rule(compile::rules::clr_more(register));
             }
             // Build label-dependent rules
             for label in labels.iter() {
