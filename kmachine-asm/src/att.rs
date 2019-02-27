@@ -5,11 +5,11 @@ use std::str::FromStr;
 
 use ::pest::Parser;
 
+use super::Arg;
 use super::AsmParser;
 use super::AsmProgram;
-use super::Arg;
-use super::Label;
 use super::Instruction;
+use super::Label;
 use super::Line;
 use super::Literal;
 use super::Register;
@@ -32,9 +32,8 @@ impl AsmParser for AttParser {
                         Rule::instruction => {
                             let mut inner = pair.into_inner();
                             let opname = inner.next().unwrap().as_str();
-                            let args = inner
-                                .flat_map(|p| p.into_inner().next())
-                                .map(|pair| match pair.as_rule() {
+                            let args = inner.flat_map(|p| p.into_inner().next()).map(|pair| {
+                                match pair.as_rule() {
                                     Rule::register => {
                                         let name = pair.into_inner().next().unwrap();
                                         Arg::Register(Register::new(name.as_str()))
@@ -49,7 +48,8 @@ impl AsmParser for AttParser {
                                         Arg::Label(Label::new(name.as_str()))
                                     }
                                     _ => unreachable!(),
-                                });
+                                }
+                            });
                             Line::from(Instruction::with_args(opname, args))
                         }
                         _ => unreachable!(),

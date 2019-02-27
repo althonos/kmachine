@@ -21,10 +21,9 @@ impl Observable {
     {
         Self {
             name: name.into(),
-            value: value.into()
+            value: value.into(),
         }
     }
-
 }
 
 impl Display for Observable {

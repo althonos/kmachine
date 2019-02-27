@@ -13,7 +13,7 @@ pub enum BinaryOperator {
     Times,
     Divided,
     Power,
-    Mod
+    Mod,
 }
 
 pub enum UnaryOp {
@@ -40,17 +40,16 @@ pub enum AlgebraicExpression {
     // Max(AlgebraicExpression, AlgebraicExpression),
     // Min(AlgebraicExpression, AlgebraicExpression),
     // Conditional(AlgebraicExpression, AlgebraicExpression, AlgebraicExpression)
-    Occurrences(Pattern)
+    Occurrences(Pattern),
 }
 
 impl Display for AlgebraicExpression {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         match self {
             AlgebraicExpression::Float(value) => value.fmt(f),
-            AlgebraicExpression::Occurrences(pattern) =>
-                f.write_char('|')
-                    .and(pattern.fmt(f))
-                    .and(f.write_char('|'))
+            AlgebraicExpression::Occurrences(pattern) => {
+                f.write_char('|').and(pattern.fmt(f)).and(f.write_char('|'))
+            }
         }
     }
 }

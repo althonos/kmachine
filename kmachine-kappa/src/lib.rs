@@ -10,9 +10,9 @@ mod expression;
 mod init;
 mod link;
 mod obs;
+mod pattern;
 mod rule;
 mod site;
-mod pattern;
 
 use std::fmt::Display;
 use std::fmt::Formatter;
@@ -21,13 +21,13 @@ use std::fmt::Write;
 
 pub use self::agent::Agent;
 pub use self::agent::AgentDecl;
+pub use self::expression::AlgebraicExpression;
 pub use self::init::Init;
 pub use self::link::Link;
-pub use self::rule::Rule;
-pub use self::site::Site;
 pub use self::obs::Observable;
 pub use self::pattern::Pattern;
-pub use self::expression::AlgebraicExpression;
+pub use self::rule::Rule;
+pub use self::site::Site;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct KappaProgram {
@@ -78,8 +78,6 @@ impl KappaProgram {
         self.rules.push(rule.into());
         self
     }
-
-
 }
 
 impl Display for KappaProgram {

@@ -11,19 +11,19 @@ use std::borrow::Cow;
 use std::io::Read;
 
 use indexmap::IndexSet;
-use kmachine_asm::AttParser;
 use kmachine_asm::Arg;
 use kmachine_asm::AsmParser;
+use kmachine_asm::AttParser;
 use kmachine_asm::Label;
 use kmachine_asm::Line;
 use kmachine_asm::Register;
 use kmachine_kappa::Agent;
+use kmachine_kappa::AlgebraicExpression;
 use kmachine_kappa::Init;
 use kmachine_kappa::KappaProgram;
-use kmachine_kappa::Site;
 use kmachine_kappa::Observable;
 use kmachine_kappa::Pattern;
-use kmachine_kappa::AlgebraicExpression;
+use kmachine_kappa::Site;
 
 fn main() {
     for filename in std::env::args().skip(1) {
@@ -164,15 +164,11 @@ fn main() {
             }
             program.init(program_chain);
 
-
             // Build observables
             for register in registers.iter() {
                 let r: &str = register.as_ref();
                 let pattern = Pattern::from(vec![agent!(UNIT(r{?r}))]);
-                let obs = Observable::new(
-                    r,
-                    AlgebraicExpression::Occurrences(pattern)
-                );
+                let obs = Observable::new(r, AlgebraicExpression::Occurrences(pattern));
                 program.observable(obs);
             }
 

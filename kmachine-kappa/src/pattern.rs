@@ -30,9 +30,7 @@ impl Pattern {
 
 impl Default for Pattern {
     fn default() -> Self {
-        Pattern {
-            agents: Vec::new()
-        }
+        Pattern { agents: Vec::new() }
     }
 }
 
@@ -50,7 +48,7 @@ impl Display for Pattern {
             agent.fmt(f)?;
             if agents.peek().is_some() {
                 f.write_char(',')
-                    .and(f.write_char(if f.alternate() {'\n'} else {' '}))?;
+                    .and(f.write_char(if f.alternate() { '\n' } else { ' ' }))?;
             }
         }
 
