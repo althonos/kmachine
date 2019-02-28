@@ -8,25 +8,6 @@ pub fn units(count: usize) -> Init {
     Init::with_agent(count, agent!(UNIT(prev[.], next[.], r{_none})))
 }
 
-macro_rules! args {
-    ($ins:ident, $op:ident ( $($argtype:path),* )) => ({
-        let mut args = $ins.arguments().iter().enumerate();
-        ($(
-            match args.next() {
-                Some((_, $argtype(a))) => a,
-                Some((i, arg)) => panic!(
-                    "invalid argument #{} for instruction `{}`: {:?}",
-                    i+1, stringify!($op), arg,
-                ),
-                None => panic!(
-                    "missing argument for instruction `{}`",
-                    stringify!($op)
-                )
-            }
-        ,)*)
-    });
-}
-
 pub fn program(asm: &AsmProgram) -> Init {
 
     let mut chain = Init::new(1);

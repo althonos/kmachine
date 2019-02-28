@@ -6,6 +6,9 @@ extern crate kappa;
 extern crate asm;
 extern crate indexmap;
 
+#[macro_use]
+mod macros;
+
 mod agents;
 mod inits;
 mod rules;
