@@ -92,7 +92,7 @@ fn main() {
 
             // Build static init
             program.init(Init::with_agent(
-                1,
+                100,
                 agent!(UNIT(prev[.], next[.], r{_none})),
             ));
             // Build program polymer

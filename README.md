@@ -14,11 +14,14 @@ cpy1:   ; move %rax to both %rbx and %rcx
         inc %rcx
         inc %rbx
         dec %rax
-        jnz %rax, cpy1
+	jz  %rax, cpy2
+        jmp cpy1
 cpy2:   ; move %rcx back into %rax
         inc %rax
         dec %rcx
-        jnz %rcx, cpy2
+        jz  %rcx, cpy3
+	jmp cpy2
+cpy3:
 ```
 
 [GNU Assembler]: https://en.wikipedia.org/wiki/GNU_Assembler
@@ -31,6 +34,7 @@ cpy2:   ; move %rcx back into %rax
 |    `inc`    |     ✓     |          |
 |    `dec`    |     ✓     |          |
 |    `jz`     |     ✓     |          |
+|    `jmp`    |     ✓     |          |
 
 
 ## About
