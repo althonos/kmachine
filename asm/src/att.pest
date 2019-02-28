@@ -1,16 +1,19 @@
 WHITESPACE = _{ " " | "\t" }
 
-char  = @{ ASCII_ALPHANUMERIC | "_" }
+COMMENT_CHAR = _{";" | "#" | "//"}
+CHAR  = @{ ASCII_ALPHANUMERIC | "_" }
 
-ident = @{ ASCII_ALPHA ~ (char*) }
+ident = @{ ASCII_ALPHA ~ (CHAR*) }
 register = { "%" ~ ident }
 literal = { "$" ~ ASCII_ALPHANUMERIC+ }
 label = { ident }
 
+comment = _{ COMMENT_CHAR ~ (!NEWLINE ~ ANY)*}
 labeldecl = { label ~ ":" }
 
 op = @{ ASCII_ALPHA+ }
 arg = { register | label | literal }
 instruction = { op ~ arg ~ ("," ~ arg)* }
 
-program = _{ (NEWLINE? ~ (labeldecl | instruction) ~ NEWLINE+)* }
+line = _{labeldecl | instruction | comment}
+program = _{ (NEWLINE* ~ line ~ (comment)? ~ NEWLINE+)* }
