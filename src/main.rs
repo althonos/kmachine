@@ -12,6 +12,7 @@ mod macros;
 mod agents;
 mod inits;
 mod rules;
+mod transformation;
 
 use std::borrow::Cow;
 use std::io::Read;
@@ -37,8 +38,9 @@ fn main() {
         let mut program = String::new();
         file.read_to_string(&mut program).unwrap();
 
-        // Parse the ASM program
-        let asm = AttParser::parse_asm(&program);
+        // Parse the ASM program and run some program transforms
+        let mut asm = AttParser::parse_asm(&program);
+        transformation::unroll_mov(&mut asm);
 
         // Collect all registers used in the program.
         let registers: IndexSet<_> = asm.registers().into_iter().map(|r| &r.name).collect();

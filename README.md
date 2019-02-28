@@ -1,6 +1,9 @@
 # ϰmachine
 
-*A toy compiler that produces Kappa code from counter machine instructions.*
+*A toy compiler that produces [Kappa] code from [counter machine] instructions.*
+
+[Kappa]: https://kappalanguage.org/
+[counter machine]: https://en.wikipedia.org/wiki/Counter_machine
 
 ## Syntax
 
@@ -14,13 +17,13 @@ cpy1:   ; move %rax to both %rbx and %rcx
         inc %rcx
         inc %rbx
         dec %rax
-	jz  %rax, cpy2
+        jz  %rax, cpy2
         jmp cpy1
 cpy2:   ; move %rcx back into %rax
         inc %rax
         dec %rcx
         jz  %rcx, cpy3
-	jmp cpy2
+        jmp cpy2
 cpy3:
 ```
 
@@ -35,6 +38,7 @@ cpy3:
 |    `inc`    |     ✓     |          |
 |    `jmp`    |     ✓     |          |
 |    `jz`     |     ✓     |          |
+|    `mov`    |           |     ✓    |
 
 
 ## About

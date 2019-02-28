@@ -1,8 +1,8 @@
 macro_rules! args {
     ($ins:ident, $op:ident ( $($argtype:path),* )) => ({
-        let mut args = $ins.arguments().iter().enumerate();
-        ($(
-            match args.next() {
+        let mut it = $ins.arguments().iter().enumerate();
+        let args = ($(
+            match it.next() {
                 Some((_, $argtype(a))) => a,
                 Some((i, arg)) => panic!(
                     "invalid argument #{} for instruction `{}`: {:?}",
@@ -13,6 +13,17 @@ macro_rules! args {
                     stringify!($op)
                 )
             }
-        ,)*)
+        ,)*);
+
+        let remaining: Vec<_> = it.map(|x| format!("{:?}", x.1)).collect();
+        if !remaining.is_empty() {
+            panic!(
+                "unused arguments for instruction `{}`: {}",
+                stringify!($op),
+                remaining.join(", ")
+            )
+        }
+
+        args
     });
 }
