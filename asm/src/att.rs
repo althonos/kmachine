@@ -24,10 +24,11 @@ impl AsmParser for AttParser {
             .map(|pairs| {
                 pairs
                     .into_iter()
-                    .map(|pair| match pair.as_rule() {
+                    .flat_map(|pair| match pair.as_rule() {
+                        Rule::EOI => None,
                         Rule::labeldecl => {
                             let ident = pair.into_inner().next().unwrap().as_str();
-                            Line::from(Label::new(ident.to_string()))
+                            Some(Line::from(Label::new(ident.to_string())))
                         }
                         Rule::instruction => {
                             let mut inner = pair.into_inner();
@@ -50,7 +51,7 @@ impl AsmParser for AttParser {
                                     _ => unreachable!(),
                                 }
                             });
-                            Line::from(Instruction::with_args(opname, args))
+                            Some(Line::from(Instruction::with_args(opname, args)))
                         }
                         _ => unreachable!(),
                     })

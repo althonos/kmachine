@@ -16,4 +16,9 @@ arg = { register | label | literal }
 instruction = { op ~ arg ~ ("," ~ arg)* }
 
 line = _{labeldecl | instruction | comment}
-program = _{ (NEWLINE* ~ line ~ (comment)? ~ NEWLINE+)* }
+program = _{
+  SOI ~
+  NEWLINE* ~
+  (line ~ (comment)? ~ NEWLINE+)* ~
+  EOI
+}

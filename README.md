@@ -31,10 +31,10 @@ cpy3:
 | Instruction | Supported | Emulated |
 | ----------- | --------- | -------- |
 |    `clr`    |     ✓     |          |
-|    `inc`    |     ✓     |          |
 |    `dec`    |     ✓     |          |
-|    `jz`     |     ✓     |          |
+|    `inc`    |     ✓     |          |
 |    `jmp`    |     ✓     |          |
+|    `jz`     |     ✓     |          |
 
 
 ## About
