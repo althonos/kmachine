@@ -3,9 +3,12 @@ WHITESPACE = _{ " " | "\t" }
 COMMENT_CHAR = _{";" | "#" | "//"}
 CHAR  = @{ ASCII_ALPHANUMERIC | "_" }
 
+number = @{ ASCII_ALPHANUMERIC+ }
+hexnumber = @{ ASCII_HEX_DIGIT }
+
 ident = @{ ASCII_ALPHA ~ (CHAR*) }
 register = { "%" ~ ident }
-literal = { "$" ~ ASCII_ALPHANUMERIC+ }
+literal = { ("$" ~ number) | ("$0x" ~ hexnumber) }
 label = { ident }
 
 comment = _{ COMMENT_CHAR ~ (!NEWLINE ~ ANY)*}

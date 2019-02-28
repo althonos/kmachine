@@ -19,7 +19,7 @@ use super::Register;
 pub struct AttParser;
 
 impl AsmParser for AttParser {
-    fn parse_asm<'a>(s: &'a str) -> AsmProgram<'a> {
+    fn parse_asm(s: &str) -> AsmProgram<'_> {
         AttParser::parse(Rule::program, s)
             .map(|pairs| {
                 pairs
@@ -40,8 +40,16 @@ impl AsmParser for AttParser {
                                         Arg::Register(Register::new(name.as_str()))
                                     }
                                     Rule::literal => {
-                                        let repr = pair.into_inner().next().unwrap();
-                                        let val = usize::from_str(repr.as_str()).unwrap();
+                                        let digits = pair.into_inner().next().unwrap();
+                                        let val = match digits.as_rule() {
+                                            Rule::hexnumber => {
+                                                usize::from_str_radix(digits.as_str(), 16).unwrap()
+                                            }
+                                            Rule::number => {
+                                                usize::from_str_radix(digits.as_str(), 10).unwrap()
+                                            }
+                                            _ => unreachable!()
+                                        };
                                         Arg::Literal(Literal::new(val))
                                     }
                                     Rule::label => {

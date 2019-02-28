@@ -56,6 +56,10 @@ impl Literal {
     pub fn new(value: usize) -> Self {
         Self { value }
     }
+
+    pub fn value(&self) -> usize {
+        self.value
+    }
 }
 
 /// An operand with its arguments, e.g. `jnz %rax, start`
