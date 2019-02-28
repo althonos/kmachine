@@ -22,7 +22,7 @@ macro_rules! rule {
     });
 }
 
-#[macro_export(local_inner_macros)]
+#[macro_export]
 #[doc(hidden)]
 macro_rules! __rule_impl_slots {
     // {} => {}
@@ -121,7 +121,7 @@ macro_rules! agent {
     });
 }
 
-#[macro_export(local_inner_macros)]
+#[macro_export]
 #[doc(hidden)]
 macro_rules! __agent_impl_sites {
     // (?) r
@@ -200,7 +200,7 @@ macro_rules! site {
     });
 }
 
-#[macro_export(local_inner_macros)]
+#[macro_export]
 #[doc(hidden)]
 macro_rules! __site_impl_states {
     ($site:ident {}) => ();
@@ -220,7 +220,7 @@ macro_rules! __site_impl_states {
     });
 }
 
-#[macro_export(local_inner_macros)]
+#[macro_export]
 #[doc(hidden)]
 macro_rules! __site_impl_links {
     ($site:ident []) => ();

@@ -1,29 +1,30 @@
 #![allow(unused_macros, unused_imports)]
 
-extern crate indexmap;
 #[macro_use]
-extern crate kmachine_kappa;
-extern crate kmachine_asm;
+extern crate kappa;
+
+extern crate asm;
+extern crate indexmap;
 
 mod compile;
 
 use std::borrow::Cow;
 use std::io::Read;
 
+use asm::Arg;
+use asm::AsmParser;
+use asm::AttParser;
+use asm::Label;
+use asm::Line;
+use asm::Register;
 use indexmap::IndexSet;
-use kmachine_asm::Arg;
-use kmachine_asm::AsmParser;
-use kmachine_asm::AttParser;
-use kmachine_asm::Label;
-use kmachine_asm::Line;
-use kmachine_asm::Register;
-use kmachine_kappa::Agent;
-use kmachine_kappa::AlgebraicExpression;
-use kmachine_kappa::Init;
-use kmachine_kappa::KappaProgram;
-use kmachine_kappa::Observable;
-use kmachine_kappa::Pattern;
-use kmachine_kappa::Site;
+use kappa::Agent;
+use kappa::AlgebraicExpression;
+use kappa::Init;
+use kappa::KappaProgram;
+use kappa::Observable;
+use kappa::Pattern;
+use kappa::Site;
 
 fn main() {
     for filename in std::env::args().skip(1) {

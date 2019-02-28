@@ -1,12 +1,11 @@
 use std::iter::IntoIterator;
 
-use kmachine_asm::Label;
-use kmachine_asm::Register;
-
-use kmachine_kappa::Agent;
-use kmachine_kappa::Link;
-use kmachine_kappa::Rule;
-use kmachine_kappa::Site;
+use asm::Label;
+use asm::Register;
+use kappa::Agent;
+use kappa::Link;
+use kappa::Rule;
+use kappa::Site;
 
 pub mod agents {
 

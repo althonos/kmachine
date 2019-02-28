@@ -9,14 +9,14 @@ indexmap = "1.0"
 # pest = "2.1"
 # pest_derive = "2.1"
 
-[dependencies.kmachine-asm]
-path = "./kmachine-asm"
+[dependencies.asm]
+path = "./asm"
 
-[dependencies.kmachine-kappa]
-path = "./kmachine-kappa"
+[dependencies.kappa]
+path = "./kappa"
 
 [workspace]
 members = [
-  "kmachine-asm",
-  "kmachine-kappa"
+  "asm",
+  "kappa"
 ]
