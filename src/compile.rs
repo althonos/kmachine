@@ -152,6 +152,25 @@ pub mod agents {
         agent
     }
 
+    pub fn jmp<L, SL>(labels: L) -> Agent
+    where
+        L: IntoIterator<Item = SL>,
+        SL: AsRef<str>,
+    {
+        // Agent with baseline sites
+        let mut site;
+        let mut agent = agent!(JMP(prog[ins.PROG]));
+
+        // Add one state to the `l` site for each label
+        site = site!(l);
+        for label in labels.into_iter() {
+            site.state(label.as_ref());
+        }
+        agent.site(site);
+
+        agent
+    }
+
     pub fn clr<R, SR>(registers: R) -> Agent
     where
         R: IntoIterator<Item = SR>,
@@ -363,6 +382,22 @@ pub mod rules {
                 CLR(prog[1], r{?reg}),
                 UNIT(prev[.], next[.], r{_none}),
                 UNIT(prev[3]),
+            } @ 1.0
+        )
+    }
+
+    pub fn jmp(label: &str) -> Rule {
+        let name = format!("jmp({0})", label);
+
+        rule!(
+            ?name {
+                MACHINE(ip[0], state{run}, target{_none}),
+                PROG(cm[0], ins[1]),
+                JMP(prog[1], l{?label}),
+            } => {
+                MACHINE(ip[.], state{jmp}, target{?label}),
+                PROG(cm[.], ins[1]),
+                JMP(prog[1], l{?label}),
             } @ 1.0
         )
     }

@@ -9,6 +9,7 @@ use std::ops::Deref;
 
 use super::Agent;
 
+/// A Kappa pattern, e.g. `A(b[0]), B(a[0])`.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Pattern {
     agents: Vec<Agent>,

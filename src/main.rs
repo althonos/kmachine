@@ -58,7 +58,8 @@ fn main() {
                 .agent(compile::agents::clr(&registers))
                 .agent(compile::agents::inc(&registers))
                 .agent(compile::agents::dec(&registers))
-                .agent(compile::agents::jz(&registers, &labels));
+                .agent(compile::agents::jz(&registers, &labels))
+                .agent(compile::agents::jmp(&labels));
 
             // Build static rules
             program
@@ -79,7 +80,8 @@ fn main() {
             }
             // Build label-dependent rules
             for label in labels.iter() {
-                program.rule(compile::rules::bind(label));
+                program.rule(compile::rules::bind(label))
+                    .rule(compile::rules::jmp(label));
             }
             // Build label-register-dependent rules
             for label in labels.iter() {
@@ -129,14 +131,6 @@ fn main() {
                             };
                             agent!(?name (prog[?idx_prog], r{?register}))
                         }
-                        // "dec" => {
-                        //     let register = op.arguments().first().unwrap().name.as_ref();
-                        //     agent!(DEC(prog[?idx_prog], r{?register}))
-                        // }
-                        // "inc" => {
-                        //     let register = op.arguments().first().unwrap().name.as_ref();
-                        //     agent!(INC(prog[?idx_prog], r{?register}))
-                        // }
                         opname @ "jz" => {
                             let mut args = ins.arguments().iter();
                             let register = match args.next() {
@@ -158,7 +152,19 @@ fn main() {
                             assert!(labels.contains(&Cow::from(label)));
                             agent!(JZ(prog[?idx_prog], r{?register}, l{?label}))
                         }
-
+                        opname @ "jmp" => {
+                            let mut args = ins.arguments().iter();
+                            let label = match args.next() {
+                                Some(Arg::Label(l)) => l.name.as_ref(),
+                                Some(arg) => panic!(
+                                    "invalid argument #2 for instruction `{}`: {:?}",
+                                    opname, arg
+                                ),
+                                None => panic!("missing argument for instruction `{}`", opname),
+                            };
+                            assert!(labels.contains(&Cow::from(label)));
+                            agent!(JMP(prog[?idx_prog], l{?label}))
+                        }
                         opname => panic!("unknown instruction `{}`", opname),
                     },
                 });
