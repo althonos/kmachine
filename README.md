@@ -29,16 +29,35 @@ cpy3:
 
 [GNU Assembler]: https://en.wikipedia.org/wiki/GNU_Assembler
 
+## Usage
+
+Provide the compiler with a pseudo-assembly program, and it will generate a 
+self-sufficient Kappa source:
+```console
+$ cargo run -- examples/loop.S > examples/loop.ka
+```
+
+This program can then be run with `KaSim` through the command line:
+```console
+$ KaSim examples/loop.ka
+```
+
+Or you can open it with the `KUI` to inspect the generated agents and rules:
+![KaSim agents](https://github.com/althonos/kmachine/raw/master/docs/agents.svg)
+
+
 ## Instructions
 
-| Instruction | Supported | Emulated |
-| ----------- | --------- | -------- |
-|    `clr`    |     ✓     |          |
-|    `dec`    |     ✓     |          |
-|    `inc`    |     ✓     |          |
-|    `jmp`    |     ✓     |          |
-|    `jz`     |     ✓     |          |
-|    `mov`    |           |     ✓    |
+| Instruction | Supported | Emulated | Example          |
+| :---------: | :-------: | :------: | :--------------- |
+|    `clr`    |     ✓     |          | `clr %rax`       |
+|    `dec`    |     ✓     |          | `dec %rbx`       |
+|    `inc`    |     ✓     |          | `inc %rcx`       |
+|    `jmp`    |     ✓     |          | `jmp label`      |
+|    `jz`     |     ✓     |          | `jz  %rax, label`|
+|    `mov`¹   |           |     ✓    | `mov $5,   %rax` |
+
+¹: *`mov` can only move a literal value to a register, but not between two registers.*
 
 
 ## About

@@ -1,4 +1,4 @@
-// prog.S
+// examples/loop.S
 %agent: UNIT(
     next[prev.UNIT],
     prev[next.UNIT, rax.MACHINE, rbx.MACHINE],
@@ -15,7 +15,7 @@
     prev[next.PROG],
     next[prev.PROG],
     cm[ip.MACHINE],
-    ins[prog.INC, prog.DEC, prog.JZ, prog.LBL, prog.CLR]
+    ins[prog.INC, prog.DEC, prog.JZ, prog.LBL, prog.CLR, prog.JMP]
 )
 %agent: LBL(
     prog[ins.PROG],
@@ -332,7 +332,7 @@
     JZ(prog[1], r{rbx}, l{loop2})
 @ 1
 
-%init: 1 UNIT(
+%init: 100 UNIT(
     prev[.],
     next[.],
     r{_none}
@@ -346,7 +346,7 @@ PROG(
     ins[1],
     next[2]
 ),
-INC(
+CLR(
     prog[1],
     r{rax}
 ),
@@ -391,90 +391,99 @@ PROG(
     ins[11],
     next[12]
 ),
-LBL(
+INC(
     prog[11],
-    l{loop1}
+    r{rax}
 ),
 PROG(
     prev[12],
     ins[13],
     next[14]
 ),
-INC(
+LBL(
     prog[13],
-    r{rbx}
+    l{loop1}
 ),
 PROG(
     prev[14],
     ins[15],
     next[16]
 ),
-DEC(
+INC(
     prog[15],
-    r{rax}
+    r{rbx}
 ),
 PROG(
     prev[16],
     ins[17],
     next[18]
 ),
-JZ(
+DEC(
     prog[17],
-    r{rax},
-    l{loop2}
+    r{rax}
 ),
 PROG(
     prev[18],
     ins[19],
     next[20]
 ),
-JMP(
+JZ(
     prog[19],
-    l{loop1}
+    r{rax},
+    l{loop2}
 ),
 PROG(
     prev[20],
     ins[21],
     next[22]
 ),
-LBL(
+JMP(
     prog[21],
-    l{loop2}
+    l{loop1}
 ),
 PROG(
     prev[22],
     ins[23],
     next[24]
 ),
-INC(
+LBL(
     prog[23],
-    r{rax}
+    l{loop2}
 ),
 PROG(
     prev[24],
     ins[25],
     next[26]
 ),
-DEC(
+INC(
     prog[25],
-    r{rbx}
+    r{rax}
 ),
 PROG(
     prev[26],
     ins[27],
     next[28]
 ),
-JZ(
+DEC(
     prog[27],
+    r{rbx}
+),
+PROG(
+    prev[28],
+    ins[29],
+    next[30]
+),
+JZ(
+    prog[29],
     r{rbx},
     l{loop1}
 ),
 PROG(
-    prev[28],
-    ins[29]
+    prev[30],
+    ins[31]
 ),
 JMP(
-    prog[29],
+    prog[31],
     l{loop2}
 )
 
