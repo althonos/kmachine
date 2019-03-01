@@ -43,7 +43,7 @@ $ KaSim examples/loop.ka
 ```
 
 Or you can open it with the `KUI` to inspect the generated agents and rules:
-![KaSim agents](https://github.com/althonos/kmachine/raw/master/docs/agents.svg)
+![KaSim agents](https://github.com/althonos/kmachine/raw/master/docs/agents.png?sanitize=true)
 
 
 ## Instructions

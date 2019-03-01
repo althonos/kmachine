@@ -32,7 +32,7 @@ pub fn prog() -> Agent {
             prev[next.PROG],
             next[prev.PROG],
             cm[ip.MACHINE],
-            ins[prog.INC, prog.DEC, prog.JZ, prog.LBL, prog.CLR]
+            ins[prog.INC, prog.DEC, prog.JZ, prog.LBL, prog.CLR, prog.JMP]
         )
     )
 }
