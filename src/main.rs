@@ -43,10 +43,10 @@ fn main() {
         transformation::unroll_mov(&mut asm);
 
         // Collect all registers used in the program.
-        let registers: IndexSet<_> = asm.registers().into_iter().map(|r| &r.name).collect();
+        let registers: IndexSet<_> = asm.registers().into_iter().map(|r| r.name()).collect();
 
         // Collect all labels declared in the program.
-        let labels: IndexSet<_> = asm.labels().into_iter().map(|l| &l.name).collect();
+        let labels: IndexSet<_> = asm.labels().into_iter().map(|l| l.name()).collect();
 
         // Compile the CM program into a Kappa source
         let mut program = KappaProgram::new();

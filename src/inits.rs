@@ -28,34 +28,34 @@ pub fn program(asm: &AsmProgram) -> Init {
 
         chain.agent(match line {
             Line::LabelLine(l) => {
-                let label = l.name.as_ref();
+                let label = l.name().as_ref();
                 agent!(LBL(prog[?idx_prog], l{?label}))
             }
-            Line::OpLine(ins) => match ins.op() {
+            Line::OpLine(ins) => match ins.mnemonic() {
                 "clr" => {
                     let (register,) = args!(ins, clr(Arg::Register));
-                    let r = register.name.as_ref();
+                    let r = register.name().as_ref();
                     agent!(CLR(prog[?idx_prog], r{?r}))
                 }
                 "dec" => {
                     let (register,) = args!(ins, dec(Arg::Register));
-                    let r = register.name.as_ref();
+                    let r = register.name().as_ref();
                     agent!(DEC(prog[?idx_prog], r{?r}))
                 }
                 "inc" => {
                     let (register,) = args!(ins, inc(Arg::Register));
-                    let r = register.name.as_ref();
+                    let r = register.name().as_ref();
                     agent!(INC(prog[?idx_prog], r{?r}))
                 }
                 "jz" => {
                     let (register,label) = args!(ins, jz(Arg::Register, Arg::Label));
-                    let r = register.name.as_ref();
-                    let l = label.name.as_ref();
+                    let r = register.name().as_ref();
+                    let l = label.name().as_ref();
                     agent!(JZ(prog[?idx_prog], r{?r}, l{?l}))
                 }
                 "jmp" => {
                     let (label,) = args!(ins, jmp(Arg::Label));
-                    let l = label.name.as_ref();
+                    let l = label.name().as_ref();
                     agent!(JMP(prog[?idx_prog], l{?l}))
                 }
                 opname => panic!("unknown instruction `{}`", opname),
