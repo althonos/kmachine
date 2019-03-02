@@ -19,30 +19,52 @@ pub use self::att::AttParser;
 /// A register, e.g. `%rax`.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Register<'a> {
-    pub name: Cow<'a, str>,
+    name: Cow<'a, str>,
 }
 
 impl<'a> Register<'a> {
-    pub fn new<I>(name: I) -> Self
+    pub fn new<N>(name: N) -> Self
     where
-        I: Into<Cow<'a, str>>,
+        N: Into<Cow<'a, str>>,
     {
         Self { name: name.into() }
+    }
+
+    pub fn name(&self) -> &str {
+        self.name.as_ref()
+    }
+
+    pub fn set_name<N>(&mut self, name: N)
+    where
+        N: Into<Cow<'a, str>>,
+    {
+        self.name = name.into();
     }
 }
 
 /// A label in the program, e.g. `start:`.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Label<'a> {
-    pub name: Cow<'a, str>,
+    name: Cow<'a, str>,
 }
 
 impl<'a> Label<'a> {
-    pub fn new<I>(name: I) -> Self
+    pub fn new<N>(name: N) -> Self
     where
-        I: Into<Cow<'a, str>>,
+        N: Into<Cow<'a, str>>,
     {
         Self { name: name.into() }
+    }
+
+    pub fn name(&self) -> &str {
+        self.name.as_ref()
+    }
+
+    pub fn set_name<N>(&mut self, name: N)
+    where
+        N: Into<Cow<'a, str>>,
+    {
+        self.name = name.into();
     }
 }
 
@@ -60,39 +82,41 @@ impl Literal {
     pub fn value(&self) -> usize {
         self.value
     }
+
+    pub fn set_value(&mut self, value: usize) {
+        self.value = value;
+    }
 }
 
-/// An operand with its arguments, e.g. `jnz %rax, start`
+/// A mnemonic with its arguments, e.g. `jnz %rax, start`.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Instruction<'a> {
-    op: Cow<'a, str>,
+    mnemonic: Cow<'a, str>,
     args: Vec<Arg<'a>>,
 }
 
 impl<'a> Instruction<'a> {
-    pub fn new<O>(op: O) -> Self
+    pub fn new<M>(mnemonic: M) -> Self
     where
-        O: Into<Cow<'a, str>>,
+        M: Into<Cow<'a, str>>,
     {
         Self {
-            op: op.into(),
+            mnemonic: mnemonic.into(),
             args: Vec::new(),
         }
     }
 
-    pub fn with_args<O, A>(op: O, args: A) -> Self
+    pub fn with_args<M, A>(mnemonic: M, args: A) -> Self
     where
-        O: Into<Cow<'a, str>>,
+        M: Into<Cow<'a, str>>,
         A: IntoIterator<Item = Arg<'a>>,
     {
-        let mut ins = Self::new(op);
-        for arg in args.into_iter() {
-            ins.argument(arg);
-        }
+        let mut ins = Self::new(mnemonic);
+        ins.args = args.into_iter().collect();
         ins
     }
 
-    pub fn argument<A>(&mut self, arg: A) -> &mut Self
+    pub fn add_argument<A>(&mut self, arg: A) -> &mut Self
     where
         A: Into<Arg<'a>>,
     {
@@ -100,8 +124,15 @@ impl<'a> Instruction<'a> {
         self
     }
 
-    pub fn op(&self) -> &str {
-        &self.op
+    pub fn mnemonic(&self) -> &str {
+        &self.mnemonic
+    }
+
+    pub fn set_mnemonic<M>(&mut self, mnemonic: M)
+    where
+        M: Into<Cow<'a, str>>
+    {
+        self.mnemonic = mnemonic.into();
     }
 
     pub fn arguments(&self) -> &Vec<Arg<'a>> {
@@ -172,14 +203,16 @@ impl<'a> AsmProgram<'a> {
             .into_iter()
             .flat_map(|ref line| match line {
                 Line::LabelLine(_) => None,
-                Line::OpLine(ins) => match ins.op() {
-                    "clr" | "dec" | "inc" | "jz" => match ins.arguments().first() {
-                        Some(Arg::Register(r)) => Some(r),
-                        _ => None,
-                    },
-                    _ => None,
-                },
+                Line::OpLine(ins) =>
+                    Some(ins.arguments()
+                        .iter()
+                        .flat_map(|arg| match arg {
+                            Arg::Register(r) => Some(r),
+                            _ => None,
+                        })
+                    )
             })
+            .flatten()
             .collect()
     }
 
