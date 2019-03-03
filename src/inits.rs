@@ -50,6 +50,12 @@ pub fn program(asm: &AsmProgram) -> Init {
                     let l = label.name().as_ref();
                     agent!(JZ(prog[?idx_prog], r{?r}, l{?l}))
                 }
+                "jnz" => {
+                    let (register, label) = args!(ins, jz(Arg::Register, Arg::Label));
+                    let r = register.name().as_ref();
+                    let l = label.name().as_ref();
+                    agent!(JNZ(prog[?idx_prog], r{?r}, l{?l}))
+                }
                 "jmp" => {
                     let (label,) = args!(ins, jmp(Arg::Label));
                     let l = label.name().as_ref();

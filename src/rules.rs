@@ -209,9 +209,41 @@ pub mod instructions {
                 PROG(cm[0], ins[1]),
                 JMP(prog[1], l{?label}),
             } => {
-                MACHINE(ip[.], state{jmp}, target{?label}),
+                MACHINE(ip[.], state{bind}, target{?label}),
                 PROG(cm[.], ins[1]),
                 JMP(prog[1], l{?label}),
+            } @ 1.0
+        )
+    }
+
+    pub fn jnz_nonzero(reg: &str, label: &str) -> Rule {
+        let name = format!("jnz({0}, {1}) | {0} != 0", reg, label);
+
+        rule!(
+            ?name {
+                MACHINE(ip[0], state{run}, ?reg[_], target{_none}),
+                PROG(cm[0], ins[1]),
+                JNZ(prog[1], r{?reg}, l{?label}),
+            } => {
+                MACHINE(ip[.], state{bind}, ?reg[_], target{?label}),
+                PROG(cm[.], ins[1]),
+                JNZ(prog[1], r{?reg}, l{?label}),
+            } @ 1.0
+        )
+    }
+
+    pub fn jnz_zero(reg: &str) -> Rule {
+        let name = format!("jnz({0}, *) | {0} != 0", reg);
+
+        rule!(
+            ?name {
+                MACHINE(ip[0], state{run}, ?reg[.]),
+                PROG(cm[0], ins[1]),
+                JNZ(prog[1], r{?reg})
+            } => {
+                MACHINE(ip[0], state{next}, ?reg[.]),
+                PROG(cm[0], ins[1]),
+                JNZ(prog[1], r{?reg})
             } @ 1.0
         )
     }
@@ -241,7 +273,7 @@ pub mod instructions {
                 PROG(cm[0], ins[1]),
                 JZ(prog[1], r{?reg}, l{?label}),
             } => {
-                MACHINE(ip[.], state{jmp}, ?reg[.], target{?label}),
+                MACHINE(ip[.], state{bind}, ?reg[.], target{?label}),
                 PROG(cm[.], ins[1]),
                 JZ(prog[1], r{?reg}, l{?label}),
             } @ 1.0

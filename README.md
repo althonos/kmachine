@@ -51,12 +51,12 @@ Or you can open it with the `KUI` to inspect the generated agents and rules:
 | Instruction | Supported | Emulated | Example          |
 | :---------: | :-------: | :------: | :--------------- |
 |    `clr`    |     ✓     |          | `clr %rax`       |
-|    `dec`    |     ✓     |          | `dec %rbx`       |
+|    `cpy`    |           |    ✓     | `cpy %rax, %rbx` |
 |    `inc`    |     ✓     |          | `inc %rcx`       |
 |    `jmp`    |     ✓     |          | `jmp label`      |
+|    `jnz`    |     ✓     |          | `jnz %rax, label`|
 |    `jz`     |     ✓     |          | `jz  %rax, label`|
 |    `mov`    |           |     ✓    | `mov $5, %rax`   |
-|    `mov`    |     ✓     |          | `mov %rax, %rbx` |
 
 
 ## About

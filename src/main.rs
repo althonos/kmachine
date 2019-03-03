@@ -30,9 +30,15 @@ fn main() {
         let mut program = String::new();
         file.read_to_string(&mut program).unwrap();
 
-        // Parse the ASM program and run some program transformations
+        // Parse the ASM program
         let mut asm = AttParser::parse_asm(&program);
+
+        // Collect all registers declared in the original program
+        let public_registers: IndexSet<String> = asm.registers().into_iter().map(|r| r.name().to_string()).collect();
+
+        // Run program transformations
         transformation::desugar_mov(&mut asm);
+        transformation::impl_cpy(&mut asm);
 
         // Collect all registers used in the program.
         let registers: IndexSet<_> = asm.registers().into_iter().map(|r| r.name()).collect();
@@ -57,6 +63,7 @@ fn main() {
             .agent(agents::instructions::inc(&registers))
             .agent(agents::instructions::jmp(&labels))
             .agent(agents::instructions::jz(&registers, &labels))
+            .agent(agents::instructions::jnz(&registers, &labels))
             .agent(agents::instructions::lbl(&labels))
             .agent(agents::instructions::mov(&registers));
 
@@ -74,6 +81,7 @@ fn main() {
                 .rule(rules::instructions::dec_one(register))
                 .rule(rules::instructions::dec_more(register))
                 .rule(rules::instructions::jz_nonzero(register))
+                .rule(rules::instructions::jnz_zero(register))
                 .rule(rules::instructions::clr_zero(register))
                 .rule(rules::instructions::clr_nonzero(register));
         }
@@ -86,7 +94,9 @@ fn main() {
         // Build label-register-dependent rules
         for label in labels.iter() {
             for register in registers.iter() {
-                program.rule(rules::instructions::jz_zero(register, label));
+                program
+                    .rule(rules::instructions::jnz_nonzero(register, label))
+                    .rule(rules::instructions::jz_zero(register, label));
             }
         }
         // Build register-register-dependent rules
@@ -105,7 +115,7 @@ fn main() {
         program.init(inits::units(100)).init(inits::program(&asm));
 
         // Build observables
-        for register in registers.iter() {
+        for register in public_registers.iter() {
             let r: &str = register.as_ref();
             let pattern = Pattern::from(vec![agent!(UNIT(r{?r}))]);
             let obs = Observable::new(r, AlgebraicExpression::Occurrences(pattern));
