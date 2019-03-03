@@ -58,6 +58,15 @@ pub fn program(asm: &AsmProgram) -> Init {
                     let l = label.name().as_ref();
                     agent!(JMP(prog[?idx_prog], l{?l}))
                 }
+                "mov" => {
+                    let (src, dst) = args!(ins, mov(Arg::Register, Arg::Register));
+                    let s = src.name().as_ref();
+                    let d = dst.name().as_ref();
+                    if src == dst {
+                        panic!("invalid arguments for instruction `mov`: {}, {}", s, d);
+                    }
+                    agent!(MOV(prog[?idx_prog], src{?s}, dst{?d}))
+                }
                 opname => panic!("unknown instruction `{}`", opname),
             }
         });

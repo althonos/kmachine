@@ -31,7 +31,7 @@ cpy3:
 
 ## Usage
 
-Provide the compiler with a pseudo-assembly program, and it will generate a 
+Provide the compiler with a pseudo-assembly program, and it will generate a
 self-sufficient Kappa source:
 ```console
 $ cargo run -- examples/loop.S > examples/loop.ka
@@ -55,9 +55,8 @@ Or you can open it with the `KUI` to inspect the generated agents and rules:
 |    `inc`    |     ✓     |          | `inc %rcx`       |
 |    `jmp`    |     ✓     |          | `jmp label`      |
 |    `jz`     |     ✓     |          | `jz  %rax, label`|
-|    `mov`¹   |           |     ✓    | `mov $5,   %rax` |
-
-¹: *`mov` can only move a literal value to a register, but not between two registers.*
+|    `mov`    |           |     ✓    | `mov $5, %rax`   |
+|    `mov`    |     ✓     |          | `mov %rax, %rbx` |
 
 
 ## About

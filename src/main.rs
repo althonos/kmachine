@@ -97,6 +97,17 @@ fn main() {
                 program.rule(rules::instructions::jz_zero(register, label));
             }
         }
+        // Build register-register-dependent rules
+        for src in registers.iter() {
+            for dst in registers.iter() {
+                if src != dst {
+                    program
+                        .rule(rules::relabel_units(src, dst))
+                        .rule(rules::instructions::mov_zero(src, dst))
+                        .rule(rules::instructions::mov_nonzero(src, dst));
+                }
+            }
+        }
 
         // Build static init
         program

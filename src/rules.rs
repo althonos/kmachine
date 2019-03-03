@@ -38,16 +38,27 @@ pub fn bind(label: &str) -> Rule {
 }
 
 pub fn reset_units() -> Rule {
-
-    let unit = agent!(UNIT(prev[.], next[0], r{#}));
-
     rule!(
-        "depol_unit" {
+        "reset_units" {
             UNIT(prev[.], next[0], r{#}),
             UNIT(prev[0], r{#})
         } => {
             UNIT(prev[.], next[.], r{_none}),
             UNIT(prev[.], r{_none})
+        } @ 1.0
+    )
+}
+
+pub fn relabel_units(r1: &str, r2: &str) -> Rule {
+    let name = format!("relabel_units | {0} -> {1}", r1, r2);
+
+    rule!(
+         ?name {
+            UNIT(prev[_], next[0], r{?r1}),
+            UNIT(prev[0], r{?r2})
+        } => {
+            UNIT(prev[_], next[0], r{?r1}),
+            UNIT(prev[0], r{?r1})
         } @ 1.0
     )
 }
@@ -240,6 +251,40 @@ pub mod instructions {
                 MACHINE(ip[.], state{jmp}, ?reg[.], target{?label}),
                 PROG(cm[.], ins[1]),
                 JZ(prog[1], r{?reg}, l{?label}),
+            } @ 1.0
+        )
+    }
+
+    pub fn mov_zero(src: &str, dst: &str) -> Rule {
+        let name = format!("mov({0}, {1}) | {0} == 0", src, dst);
+
+        rule!(
+            ?name {
+                MACHINE(ip[0], state{run}, ?src[.], ?dst[#]),
+                PROG(cm[0], ins[1]),
+                MOV(prog[1], src{?src}, dst{?dst}),
+            } => {
+                MACHINE(ip[0], state{next}, ?src[.], ?dst[.]),
+                PROG(cm[0], ins[1]),
+                MOV(prog[1], src{?src}, dst{?dst}),
+            } @ 1.0
+        )
+    }
+
+    pub fn mov_nonzero(src: &str, dst: &str) -> Rule {
+        let name = format!("mov({0}, {1}) | {0} != 0", src, dst);
+
+        rule!(
+            ?name {
+                MACHINE(ip[0], state{run}, ?src[2], ?dst[#]),
+                PROG(cm[0], ins[1]),
+                MOV(prog[1], src{?src}, dst{?dst}),
+                UNIT(prev[2], r{?src}),
+            } => {
+                MACHINE(ip[0], state{next}, ?src[.], ?dst[2]),
+                PROG(cm[0], ins[1]),
+                MOV(prog[1], src{?src}, dst{?dst}),
+                UNIT(prev[2], r{?dst}),
             } @ 1.0
         )
     }
