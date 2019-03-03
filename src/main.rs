@@ -38,9 +38,10 @@ fn main() {
         let mut program = String::new();
         file.read_to_string(&mut program).unwrap();
 
-        // Parse the ASM program and run some program transforms
+        // Parse the ASM program and run some program transformations
         let mut asm = AttParser::parse_asm(&program);
-        transformation::unroll_mov(&mut asm);
+        transformation::desugar_mov(&mut asm);
+        transformation::impl_movl(&mut asm);
 
         // Collect all registers used in the program.
         let registers: IndexSet<_> = asm.registers().into_iter().map(|r| r.name()).collect();
@@ -60,39 +61,40 @@ fn main() {
             // instructions
             .agent(agents::prog())
             // pseudo-operands
-            .agent(agents::lbl(&labels))
-            .agent(agents::clr(&registers))
-            .agent(agents::inc(&registers))
-            .agent(agents::dec(&registers))
-            .agent(agents::jz(&registers, &labels))
-            .agent(agents::jmp(&labels));
+            .agent(agents::instructions::clr(&registers))
+            .agent(agents::instructions::dec(&registers))
+            .agent(agents::instructions::inc(&registers))
+            .agent(agents::instructions::jmp(&labels))
+            .agent(agents::instructions::jz(&registers, &labels))
+            .agent(agents::instructions::lbl(&labels))
+            .agent(agents::instructions::mov(&registers));
 
         // Build static rules
         program
-            .rule(rules::mov())
-            .rule(rules::lbl());
+            .rule(rules::next())
+            .rule(rules::instructions::lbl());
         // Build register-dependent rules
         for register in registers.iter() {
             program
-                .rule(rules::inc_nonzero(register))
-                .rule(rules::inc_zero(register))
-                .rule(rules::dec_zero(register))
-                .rule(rules::dec_one(register))
-                .rule(rules::dec_more(register))
-                .rule(rules::jz_nonzero(register))
-                .rule(rules::clr_zero(register))
-                .rule(rules::clr_one(register))
-                .rule(rules::clr_more(register));
+                .rule(rules::instructions::inc_nonzero(register))
+                .rule(rules::instructions::inc_zero(register))
+                .rule(rules::instructions::dec_zero(register))
+                .rule(rules::instructions::dec_one(register))
+                .rule(rules::instructions::dec_more(register))
+                .rule(rules::instructions::jz_nonzero(register))
+                .rule(rules::instructions::clr_zero(register))
+                .rule(rules::instructions::clr_one(register))
+                .rule(rules::instructions::clr_more(register));
         }
         // Build label-dependent rules
         for label in labels.iter() {
             program.rule(rules::bind(label))
-                .rule(rules::jmp(label));
+                .rule(rules::instructions::jmp(label));
         }
         // Build label-register-dependent rules
         for label in labels.iter() {
             for register in registers.iter() {
-                program.rule(rules::jz_zero(register, label));
+                program.rule(rules::instructions::jz_zero(register, label));
             }
         }
 

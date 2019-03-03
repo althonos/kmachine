@@ -15,8 +15,10 @@ pub fn desugar_mov<'a, 'b>(asm: &'b mut AsmProgram<'a>) -> &'b mut AsmProgram<'a
                 let new_ins = match ins.mnemonic() {
                     "mov" => Instruction::with_args(
                         match ins.arguments().first() {
-                            Some(Arg::Register(_)) => "movr",
-                            _ => "movl",
+                            Some(Arg::Literal(_)) => "movl",
+                            Some(Arg::Register(_)) => "mov",
+                            Some(a) => panic!("invalid argument #1 for instruction 'mov': {:?}", a),
+                            None => panic!("missing argument #1 for instruction 'mov'"),
                         },
                         ins.arguments().iter().cloned(),
                     ),
@@ -32,14 +34,14 @@ pub fn desugar_mov<'a, 'b>(asm: &'b mut AsmProgram<'a>) -> &'b mut AsmProgram<'a
 }
 
 
-pub fn unroll_mov<'a, 'b>(asm: &'b mut AsmProgram<'a>) -> &'b mut AsmProgram<'a> {
+pub fn impl_movl<'a, 'b>(asm: &'b mut AsmProgram<'a>) -> &'b mut AsmProgram<'a> {
 
     let lines = std::mem::replace(asm.lines_mut(), Vec::new());
     let new = asm.lines_mut();
 
     for line in lines.into_iter() {
         match line {
-            Line::OpLine(ref ins) if ins.mnemonic() == "mov" => {
+            Line::OpLine(ref ins) if ins.mnemonic() == "movl" => {
                 let (lit, reg) = args!(ins, mov(Arg::Literal, Arg::Register));
                 new.push(Line::OpLine(
                     Instruction::with_args("clr", Some(Arg::Register(reg.clone())))
