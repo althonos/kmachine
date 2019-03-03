@@ -13,6 +13,7 @@ mod obs;
 mod pattern;
 mod rule;
 mod site;
+mod state;
 
 use std::fmt::Display;
 use std::fmt::Formatter;
@@ -28,6 +29,7 @@ pub use self::obs::Observable;
 pub use self::pattern::Pattern;
 pub use self::rule::Rule;
 pub use self::site::Site;
+pub use self::state::State;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct KappaProgram {

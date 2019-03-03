@@ -6,12 +6,13 @@ use std::fmt::Write;
 use indexmap::IndexSet;
 
 use super::Link;
+use super::State;
 
 /// A Kappa site, e.g. `s{a}[.]`
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Site {
     name: String,
-    states: IndexSet<String>,
+    states: IndexSet<State>,
     links: IndexSet<Link>,
 }
 
@@ -43,7 +44,7 @@ impl Site {
 
     pub fn state<S>(&mut self, state: S) -> &mut Self
     where
-        S: Into<String>,
+        S: Into<State>,
     {
         self.states.insert(state.into());
         self

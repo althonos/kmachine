@@ -204,8 +204,11 @@ macro_rules! site {
 #[doc(hidden)]
 macro_rules! __site_impl_states {
     ($site:ident {}) => ();
+    ($site:ident {#}) => ({
+        $site.state($crate::State::Unknown);
+    });
     ($site:ident {$state:ident}) => ({
-        $site.state(stringify!($state));
+        $site.state($crate::State::from(stringify!($state)));
     });
     ($site:ident {? $state:ident}) => ({
         $site.state($state);
