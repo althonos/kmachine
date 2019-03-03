@@ -37,6 +37,21 @@ pub fn bind(label: &str) -> Rule {
     )
 }
 
+pub fn reset_units() -> Rule {
+
+    let unit = agent!(UNIT(prev[.], next[0], r{#}));
+
+    rule!(
+        "depol_unit" {
+            UNIT(prev[.], next[0], r{#}),
+            UNIT(prev[0], r{#})
+        } => {
+            UNIT(prev[.], next[.], r{_none}),
+            UNIT(prev[.], r{_none})
+        } @ 1.0
+    )
+}
+
 pub mod instructions {
 
     use super::Rule;
@@ -163,7 +178,7 @@ pub mod instructions {
         )
     }
 
-    pub fn clr_one(reg: &str) -> Rule {
+    pub fn clr_nonzero(reg: &str) -> Rule {
         let name = format!("clr({0}) | {0} == 1", reg);
 
         rule!(
@@ -171,32 +186,12 @@ pub mod instructions {
                 MACHINE(ip[0], state{run}, ?reg[2]),
                 PROG(cm[0], ins[1]),
                 CLR(prog[1], r{?reg}),
-                UNIT(prev[2], next[.], r{?reg}),
+                UNIT(prev[2], r{?reg}),
             } => {
                 MACHINE(ip[0], state{next}, ?reg[.]),
                 PROG(cm[0], ins[1]),
                 CLR(prog[1], r{?reg}),
-                UNIT(prev[.], next[.], r{_none}),
-            } @ 1.0
-        )
-    }
-
-    pub fn clr_more(reg: &str) -> Rule {
-        let name = format!("clr({0}) | {0} >= 2", reg);
-
-        rule!(
-            ?name {
-                MACHINE(ip[0], state{run}, ?reg[2]),
-                PROG(cm[0], ins[1]),
-                CLR(prog[1], r{?reg}),
-                UNIT(prev[2], next[3], r{?reg}),
-                UNIT(prev[3]),
-            } => {
-                MACHINE(ip[0], state{run}, ?reg[3]),
-                PROG(cm[0], ins[1]),
-                CLR(prog[1], r{?reg}),
-                UNIT(prev[.], next[.], r{_none}),
-                UNIT(prev[3]),
+                UNIT(prev[.], r{_none}),
             } @ 1.0
         )
     }

@@ -72,6 +72,7 @@ fn main() {
         // Build static rules
         program
             .rule(rules::next())
+            .rule(rules::reset_units())
             .rule(rules::instructions::lbl());
         // Build register-dependent rules
         for register in registers.iter() {
@@ -83,8 +84,7 @@ fn main() {
                 .rule(rules::instructions::dec_more(register))
                 .rule(rules::instructions::jz_nonzero(register))
                 .rule(rules::instructions::clr_zero(register))
-                .rule(rules::instructions::clr_one(register))
-                .rule(rules::instructions::clr_more(register));
+                .rule(rules::instructions::clr_nonzero(register));
         }
         // Build label-dependent rules
         for label in labels.iter() {
