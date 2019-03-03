@@ -1,0 +1,34 @@
+WHITESPACE = _{ " " | "\t" }
+
+COMMENT_CHAR = _{";" | "#" | "//"}
+CHAR  = @{ ASCII_ALPHANUMERIC | "_" }
+
+number = @{ ASCII_DIGIT+ }
+hexnumber = @{ ASCII_HEX_DIGIT+ }
+octnumber = @{ ASCII_OCT_DIGIT+ }
+
+literal = {
+    ("$0x" ~ hexnumber)
+    | ("$0o" ~ octnumber)
+    | ("$" ~ number)
+    | ("$" ~ ident)
+}
+
+ident = @{ ASCII_ALPHA ~ (CHAR*) }
+register = { "%" ~ ident }
+label = { ident }
+
+comment = _{ COMMENT_CHAR ~ (!NEWLINE ~ ANY)*}
+labeldecl = { label ~ ":" }
+
+op = @{ ASCII_ALPHA+ }
+arg = { register | label | literal }
+instruction = { op ~ (arg ~ ("," ~ arg){0,2})? }
+
+line = _{labeldecl | instruction | comment}
+program = _{
+  SOI ~
+  NEWLINE* ~
+  (line ~ (comment)? ~ NEWLINE+)* ~
+  EOI
+}

@@ -18,5 +18,6 @@ path = "./kappa"
 [workspace]
 members = [
   "asm",
+  "attasm",
   "kappa"
 ]
