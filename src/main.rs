@@ -33,7 +33,6 @@ fn main() {
         // Parse the ASM program and run some program transformations
         let mut asm = AttParser::parse_asm(&program);
         transformation::desugar_mov(&mut asm);
-        transformation::impl_movl(&mut asm);
 
         // Collect all registers used in the program.
         let registers: IndexSet<_> = asm.registers().into_iter().map(|r| r.name()).collect();
