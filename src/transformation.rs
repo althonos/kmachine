@@ -1,11 +1,9 @@
-use asm::AsmProgram;
 use asm::Arg;
-use asm::Line;
+use asm::AsmProgram;
 use asm::Instruction;
-
+use asm::Line;
 
 pub fn desugar_mov<'a, 'b>(asm: &'b mut AsmProgram<'a>) -> &'b mut AsmProgram<'a> {
-
     let lines = std::mem::replace(asm.lines_mut(), Vec::new());
     let new = asm.lines_mut();
 
@@ -33,9 +31,7 @@ pub fn desugar_mov<'a, 'b>(asm: &'b mut AsmProgram<'a>) -> &'b mut AsmProgram<'a
     asm
 }
 
-
 pub fn impl_movl<'a, 'b>(asm: &'b mut AsmProgram<'a>) -> &'b mut AsmProgram<'a> {
-
     let lines = std::mem::replace(asm.lines_mut(), Vec::new());
     let new = asm.lines_mut();
 
@@ -43,9 +39,10 @@ pub fn impl_movl<'a, 'b>(asm: &'b mut AsmProgram<'a>) -> &'b mut AsmProgram<'a> 
         match line {
             Line::OpLine(ref ins) if ins.mnemonic() == "movl" => {
                 let (lit, reg) = args!(ins, mov(Arg::Literal, Arg::Register));
-                new.push(Line::OpLine(
-                    Instruction::with_args("clr", Some(Arg::Register(reg.clone())))
-                ));
+                new.push(Line::OpLine(Instruction::with_args(
+                    "clr",
+                    Some(Arg::Register(reg.clone())),
+                )));
                 for _ in 0..lit.value() {
                     let mut unrolled = Instruction::new("inc");
                     unrolled.add_argument(Arg::Register(reg.clone()));
@@ -59,20 +56,18 @@ pub fn impl_movl<'a, 'b>(asm: &'b mut AsmProgram<'a>) -> &'b mut AsmProgram<'a> 
     asm
 }
 
-
 pub fn impl_copy<'a, 'b>(asm: &'b mut AsmProgram<'a>) -> &'b mut AsmProgram<'a> {
-
     let lines = std::mem::replace(asm.lines_mut(), Vec::new());
     let new = asm.lines_mut();
 
     for line in lines.into_iter() {
         match line {
             Line::OpLine(ref ins) if ins.mnemonic() == "cpy" => {
-
                 let (lit, reg) = args!(ins, mov(Arg::Literal, Arg::Register));
-                new.push(Line::OpLine(
-                    Instruction::with_args("clr", Some(Arg::Register(reg.clone())))
-                ));
+                new.push(Line::OpLine(Instruction::with_args(
+                    "clr",
+                    Some(Arg::Register(reg.clone())),
+                )));
                 for _ in 0..lit.value() {
                     let mut unrolled = Instruction::new("inc");
                     unrolled.add_argument(Arg::Register(reg.clone()));

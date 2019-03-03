@@ -130,7 +130,7 @@ impl<'a> Instruction<'a> {
 
     pub fn set_mnemonic<M>(&mut self, mnemonic: M)
     where
-        M: Into<Cow<'a, str>>
+        M: Into<Cow<'a, str>>,
     {
         self.mnemonic = mnemonic.into();
     }
@@ -203,14 +203,10 @@ impl<'a> AsmProgram<'a> {
             .into_iter()
             .flat_map(|ref line| match line {
                 Line::LabelLine(_) => None,
-                Line::OpLine(ins) =>
-                    Some(ins.arguments()
-                        .iter()
-                        .flat_map(|arg| match arg {
-                            Arg::Register(r) => Some(r),
-                            _ => None,
-                        })
-                    )
+                Line::OpLine(ins) => Some(ins.arguments().iter().flat_map(|arg| match arg {
+                    Arg::Register(r) => Some(r),
+                    _ => None,
+                })),
             })
             .flatten()
             .collect()

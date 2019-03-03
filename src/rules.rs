@@ -1,11 +1,4 @@
-use std::iter::IntoIterator;
-
-use asm::Label;
-use asm::Register;
-use kappa::Agent;
-use kappa::Link;
 use kappa::Rule;
-use kappa::Site;
 
 pub fn next() -> Rule {
     rule!(

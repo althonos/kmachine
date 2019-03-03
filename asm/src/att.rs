@@ -48,7 +48,7 @@ impl AsmParser for AttParser {
                                             Rule::number => {
                                                 usize::from_str_radix(digits.as_str(), 10).unwrap()
                                             }
-                                            _ => unreachable!()
+                                            _ => unreachable!(),
                                         };
                                         Arg::Literal(Literal::new(val))
                                     }

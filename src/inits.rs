@@ -1,6 +1,5 @@
-
-use asm::AsmProgram;
 use asm::Arg;
+use asm::AsmProgram;
 use asm::Line;
 use kappa::Init;
 
@@ -9,14 +8,12 @@ pub fn units(count: usize) -> Init {
 }
 
 pub fn program(asm: &AsmProgram) -> Init {
-
     let mut chain = Init::new(1);
-    chain.agent(agent!(MACHINE(state{run}, ip[0])));
+    chain.agent(agent!(MACHINE(state { run }, ip[0])));
 
     let mut lines = asm.lines().iter().enumerate().peekable();
     while let Some((index, line)) = lines.next() {
-
-        let idx_prev = index*2;
+        let idx_prev = index * 2;
         let idx_prog = idx_prev + 1;
         let idx_next = idx_prev + 2;
 
@@ -48,7 +45,7 @@ pub fn program(asm: &AsmProgram) -> Init {
                     agent!(INC(prog[?idx_prog], r{?r}))
                 }
                 "jz" => {
-                    let (register,label) = args!(ins, jz(Arg::Register, Arg::Label));
+                    let (register, label) = args!(ins, jz(Arg::Register, Arg::Label));
                     let r = register.name().as_ref();
                     let l = label.name().as_ref();
                     agent!(JZ(prog[?idx_prog], r{?r}, l{?l}))
@@ -68,7 +65,7 @@ pub fn program(asm: &AsmProgram) -> Init {
                     agent!(MOV(prog[?idx_prog], src{?s}, dst{?d}))
                 }
                 opname => panic!("unknown instruction `{}`", opname),
-            }
+            },
         });
     }
 

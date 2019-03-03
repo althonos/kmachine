@@ -1,4 +1,4 @@
-#![allow(unused_macros, unused_imports)]
+#![allow(unused_macros)]
 
 #[macro_use]
 extern crate kappa;
@@ -14,23 +14,15 @@ mod inits;
 mod rules;
 mod transformation;
 
-use std::borrow::Cow;
 use std::io::Read;
 
-use asm::Arg;
 use asm::AsmParser;
 use asm::AttParser;
-use asm::Label;
-use asm::Line;
-use asm::Register;
 use indexmap::IndexSet;
-use kappa::Agent;
 use kappa::AlgebraicExpression;
-use kappa::Init;
 use kappa::KappaProgram;
 use kappa::Observable;
 use kappa::Pattern;
-use kappa::Site;
 
 fn main() {
     for filename in std::env::args().skip(1) {
@@ -88,7 +80,8 @@ fn main() {
         }
         // Build label-dependent rules
         for label in labels.iter() {
-            program.rule(rules::bind(label))
+            program
+                .rule(rules::bind(label))
                 .rule(rules::instructions::jmp(label));
         }
         // Build label-register-dependent rules
@@ -110,9 +103,7 @@ fn main() {
         }
 
         // Build static init
-        program
-            .init(inits::units(100))
-            .init(inits::program(&asm));
+        program.init(inits::units(100)).init(inits::program(&asm));
 
         // Build observables
         for register in registers.iter() {

@@ -1,10 +1,6 @@
 use std::iter::IntoIterator;
 
-use asm::Label;
-use asm::Register;
 use kappa::Agent;
-use kappa::Link;
-use kappa::Rule;
 use kappa::Site;
 
 pub fn unit<R, SR>(registers: R) -> Agent
@@ -62,7 +58,6 @@ where
 
     agent
 }
-
 
 pub mod instructions {
 
