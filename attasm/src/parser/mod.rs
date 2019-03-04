@@ -1,8 +1,6 @@
 #[macro_use]
 mod macros;
 
-use pest::Parser as PestParser;
-
 #[derive(Parser)]
 #[grammar = "parser/att.pest"]
 pub struct Parser;

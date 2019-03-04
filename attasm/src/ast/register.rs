@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use std::convert::TryFrom;
-use std::fmt::Formatter;
 use std::fmt::Display;
+use std::fmt::Formatter;
 use std::fmt::Result as FmtResult;
 
 use pest::error::Error as PestError;
@@ -17,14 +17,11 @@ pub struct Register<'a> {
 }
 
 impl<'a> Register<'a> {
-
     pub fn new<N>(name: N) -> Self
     where
         N: Into<Cow<'a, str>>,
     {
-        Self {
-            name: name.into(),
-        }
+        Self { name: name.into() }
     }
 
     pub fn name(&self) -> &str {
@@ -37,7 +34,6 @@ impl<'a> Register<'a> {
     {
         self.name = name.into();
     }
-
 }
 
 impl<'a> Display for Register<'a> {
@@ -49,12 +45,11 @@ impl<'a> Display for Register<'a> {
 impl<'a> TryFrom<&'a str> for Register<'a> {
     type Error = PestError<Rule>;
     fn try_from(s: &'a str) -> Result<Self, PestError<Rule>> {
-        Parser::parse(Rule::register, s)
-            .and_then(|mut pairs| {
-                let pair = pairs.next().unwrap();
-                check_complete!(pair, s);
-                Ok(Self::new(pair.into_inner().as_str()))
-            })
+        Parser::parse(Rule::register, s).and_then(|mut pairs| {
+            let pair = pairs.next().unwrap();
+            check_complete!(pair, s);
+            Ok(Self::new(pair.into_inner().as_str()))
+        })
     }
 }
 

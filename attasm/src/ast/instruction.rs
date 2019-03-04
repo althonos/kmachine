@@ -1,16 +1,16 @@
 use std::borrow::Cow;
 use std::convert::TryFrom;
-use std::fmt::Formatter;
 use std::fmt::Display;
+use std::fmt::Formatter;
 use std::fmt::Result as FmtResult;
 use std::fmt::Write;
 
 use pest::error::Error as PestError;
 use pest::Parser as PestParser;
 
+use super::Arg;
 use crate::parser::Parser;
 use crate::parser::Rule;
-use super::Arg;
 
 /// A mnemonic with its arguments, e.g. `jnz %rax, start`.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -84,41 +84,38 @@ impl<'a> Display for Instruction<'a> {
 impl<'a> TryFrom<&'a str> for Instruction<'a> {
     type Error = PestError<Rule>;
     fn try_from(s: &'a str) -> Result<Self, PestError<Rule>> {
-        Parser::parse(Rule::instruction, s)
-            .and_then(|mut pairs| {
+        Parser::parse(Rule::instruction, s).and_then(|mut pairs| {
+            let pair = pairs.next().unwrap();
+            check_complete!(pair, s);
+            let mut inner = pair.into_inner();
 
-                let pair = pairs.next().unwrap();
-                check_complete!(pair, s);
-                let mut inner = pair.into_inner();
+            let op = inner.next().unwrap().as_str();
 
-                let op = inner.next().unwrap().as_str();
+            let mut args = Vec::new();
+            for pair in inner {
+                args.push(Arg::try_from(pair.as_str())?);
+            }
 
-                let mut args = Vec::new();
-                for pair in inner {
-                    args.push(Arg::try_from(pair.as_str())?);
-                }
-
-                Ok(Self::with_args(op, args))
-            })
+            Ok(Self::with_args(op, args))
+        })
     }
 }
 
 #[cfg(test)]
 mod tests {
 
-    use crate::ast::Register;
     use super::*;
+    use crate::ast::Register;
 
     #[test]
     fn parse() {
         let mut ins = Instruction::new("mov");
         ins.add_argument(Register::new("rax"));
         ins.add_argument(Register::new("rbx"));
-        assert_eq!(Instruction::try_from("mov %rax, %rbx"),  Ok(ins));
+        assert_eq!(Instruction::try_from("mov %rax, %rbx"), Ok(ins));
 
         assert!(Instruction::try_from("mov;").is_err());
     }
-
 
     #[test]
     fn to_string() {
@@ -133,6 +130,5 @@ mod tests {
         ins.add_argument(Register::new("rbx"));
         assert_eq!(&ins.to_string(), "mov\t%rax, %rbx");
     }
-
 
 }

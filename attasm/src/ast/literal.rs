@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use std::convert::TryFrom;
-use std::fmt::Formatter;
 use std::fmt::Display;
+use std::fmt::Formatter;
 use std::fmt::Result as FmtResult;
 
 use pest::error::Error as PestError;
@@ -33,31 +33,30 @@ impl<'a> Display for Literal<'a> {
 impl<'a> TryFrom<&'a str> for Literal<'a> {
     type Error = PestError<Rule>;
     fn try_from(s: &'a str) -> Result<Self, PestError<Rule>> {
-        Parser::parse(Rule::literal, s)
-            .and_then(|mut pairs| {
-                let pair = pairs.next().unwrap();
-                check_complete!(pair, s);
-                let inner = pair.into_inner().next().unwrap();
-                match inner.as_rule() {
-                    Rule::number => {
-                        let n = usize::from_str_radix(inner.as_str(), 10);
-                        Ok(Literal::Dec(n.unwrap()))
-                    }
-                    Rule::octnumber => {
-                        let n = usize::from_str_radix(inner.as_str(), 8);
-                        Ok(Literal::Oct(n.unwrap()))
-                    }
-                    Rule::hexnumber => {
-                        let n = usize::from_str_radix(inner.as_str(), 16);
-                        Ok(Literal::Hex(n.unwrap()))
-                    }
-                    Rule::ident => {
-                        let a = inner.as_str().into();
-                        Ok(Literal::Address(a))
-                    }
-                    _ => unreachable!()
+        Parser::parse(Rule::literal, s).and_then(|mut pairs| {
+            let pair = pairs.next().unwrap();
+            check_complete!(pair, s);
+            let inner = pair.into_inner().next().unwrap();
+            match inner.as_rule() {
+                Rule::number => {
+                    let n = usize::from_str_radix(inner.as_str(), 10);
+                    Ok(Literal::Dec(n.unwrap()))
                 }
-            })
+                Rule::octnumber => {
+                    let n = usize::from_str_radix(inner.as_str(), 8);
+                    Ok(Literal::Oct(n.unwrap()))
+                }
+                Rule::hexnumber => {
+                    let n = usize::from_str_radix(inner.as_str(), 16);
+                    Ok(Literal::Hex(n.unwrap()))
+                }
+                Rule::ident => {
+                    let a = inner.as_str().into();
+                    Ok(Literal::Address(a))
+                }
+                _ => unreachable!(),
+            }
+        })
     }
 }
 
@@ -83,6 +82,9 @@ mod tests {
 
     #[test]
     fn parse_address() {
-        assert_eq!(Literal::try_from("$LCA"), Ok(Literal::Address("LCA".into())));
+        assert_eq!(
+            Literal::try_from("$LCA"),
+            Ok(Literal::Address("LCA".into()))
+        );
     }
 }
