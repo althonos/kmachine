@@ -4,6 +4,12 @@ use std::fmt::Formatter;
 use std::fmt::Display;
 use std::fmt::Result as FmtResult;
 
+use pest::error::Error as PestError;
+use pest::Parser as PestParser;
+
+use crate::parser::Parser;
+use crate::parser::Rule;
+
 /// A label somewhere in the program.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Label<'a> {
@@ -36,5 +42,17 @@ impl<'a> Label<'a> {
 impl<'a> Display for Label<'a> {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         self.name.fmt(f)
+    }
+}
+
+impl<'a> TryFrom<&'a str> for Label<'a> {
+    type Error = PestError<Rule>;
+    fn try_from(s: &'a str) -> Result<Self, PestError<Rule>> {
+        Parser::parse(Rule::label, s)
+            .and_then(|mut pairs| {
+                let pair = pairs.next().unwrap();
+                check_complete!(pair, s);
+                Ok(Label::new(pair.as_str()))
+            })
     }
 }

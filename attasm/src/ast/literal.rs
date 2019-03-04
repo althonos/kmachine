@@ -10,6 +10,7 @@ use pest::Parser as PestParser;
 use crate::parser::Parser;
 use crate::parser::Rule;
 
+/// A literal value, e.g. `$0x1A`, `$12` or `$address`.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Literal<'a> {
     Dec(usize),

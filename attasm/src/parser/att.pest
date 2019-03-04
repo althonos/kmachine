@@ -22,7 +22,7 @@ comment = _{ COMMENT_CHAR ~ (!NEWLINE ~ ANY)*}
 labeldecl = { label ~ ":" }
 
 op = @{ ASCII_ALPHA+ }
-arg = { register | label | literal }
+arg = { register |  literal | label }
 instruction = { op ~ (arg ~ ("," ~ arg){0,2})? }
 
 line = _{labeldecl | instruction | comment}

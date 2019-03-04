@@ -1,4 +1,9 @@
 use std::borrow::Cow;
+use std::convert::TryFrom;
+use std::fmt::Formatter;
+use std::fmt::Display;
+use std::fmt::Result as FmtResult;
+use std::fmt::Write;
 
 use super::Arg;
 
@@ -52,4 +57,45 @@ impl<'a> Instruction<'a> {
     pub fn arguments(&self) -> &Vec<Arg<'a>> {
         &self.args
     }
+}
+
+impl<'a> Display for Instruction<'a> {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        f.write_str(&self.mnemonic)?;
+        let mut args = self.args.iter().peekable();
+        if args.peek().is_some() {
+            f.write_char('\t')?;
+        }
+        while let Some(arg) = args.next() {
+            arg.fmt(f)?;
+            if args.peek().is_some() {
+                f.write_str(", ")?;
+            }
+        }
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use crate::ast::Register;
+    use super::*;
+
+    #[test]
+    fn to_string() {
+
+        let mut ins = Instruction::new("nop");
+        assert_eq!(&ins.to_string(), "nop");
+
+        ins.set_mnemonic("inc");
+        ins.add_argument(Register::new("rax"));
+        assert_eq!(&ins.to_string(), "inc\t%rax");
+
+        ins.set_mnemonic("mov");
+        ins.add_argument(Register::new("rbx"));
+        assert_eq!(&ins.to_string(), "mov\t%rax, %rbx");
+    }
+
+
 }

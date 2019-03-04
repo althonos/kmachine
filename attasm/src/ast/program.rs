@@ -1,10 +1,23 @@
+use std::convert::TryFrom;
+use std::fmt::Formatter;
+use std::fmt::Display;
+use std::fmt::Result as FmtResult;
 use std::iter::FromIterator;
 
 use super::Line;
 
+/// An assembler program written in AT&T syntax.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Program<'a> {
     lines: Vec<Line<'a>>
+}
+
+impl<'a> Program<'a> {
+
+    pub fn lines(&self) -> &Vec<Line<'a>> {
+        &self.lines
+    }
+
 }
 
 impl<'a> From<Vec<Line<'a>>> for Program<'a> {
@@ -23,5 +36,15 @@ impl<'a> FromIterator<Line<'a>> for Program<'a> {
         Self {
             lines: iter.into_iter().collect(),
         }
+    }
+}
+
+impl<'a> Display for Program<'a> {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        let mut lines = self.lines().iter();
+        while let Some(line) = lines.next() {
+            line.fmt(f)?;
+        }
+        Ok(())
     }
 }
