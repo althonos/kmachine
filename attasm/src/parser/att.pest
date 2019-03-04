@@ -14,7 +14,7 @@ literal = {
     | ("$" ~ ident)
 }
 
-ident = @{ ASCII_ALPHA ~ (CHAR*) }
+ident = @{ ASCII_ALPHA ~ (CHAR)* }
 register = { "%" ~ ident }
 label = { ident }
 
@@ -23,12 +23,14 @@ labeldecl = { label ~ ":" }
 
 op = @{ ASCII_ALPHA+ }
 arg = { register |  literal | label }
-instruction = { op ~ (arg ~ ("," ~ arg){0,2})? }
+instruction = { op ~ (arg ~ ("," ~ WHITESPACE* ~ arg)*)? }
 
+
+singleline = _{(labeldecl | instruction) ~ comment? ~ NEWLINE?}
 line = _{labeldecl | instruction | comment}
+
 program = _{
   SOI ~
   NEWLINE* ~
-  (line ~ (comment)? ~ NEWLINE+)* ~
-  EOI
+  (line ~ (comment)? ~ (NEWLINE+ | (NEWLINE* ~ EOI)) )*
 }

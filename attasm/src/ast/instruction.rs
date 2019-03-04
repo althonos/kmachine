@@ -5,6 +5,11 @@ use std::fmt::Display;
 use std::fmt::Result as FmtResult;
 use std::fmt::Write;
 
+use pest::error::Error as PestError;
+use pest::Parser as PestParser;
+
+use crate::parser::Parser;
+use crate::parser::Rule;
 use super::Arg;
 
 /// A mnemonic with its arguments, e.g. `jnz %rax, start`.
@@ -76,6 +81,28 @@ impl<'a> Display for Instruction<'a> {
     }
 }
 
+impl<'a> TryFrom<&'a str> for Instruction<'a> {
+    type Error = PestError<Rule>;
+    fn try_from(s: &'a str) -> Result<Self, PestError<Rule>> {
+        Parser::parse(Rule::instruction, s)
+            .and_then(|mut pairs| {
+
+                let pair = pairs.next().unwrap();
+                check_complete!(pair, s);
+                let mut inner = pair.into_inner();
+
+                let op = inner.next().unwrap().as_str();
+
+                let mut args = Vec::new();
+                for pair in inner {
+                    args.push(Arg::try_from(pair.as_str())?);
+                }
+
+                Ok(Self::with_args(op, args))
+            })
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -83,8 +110,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn to_string() {
+    fn parse() {
+        let mut ins = Instruction::new("mov");
+        ins.add_argument(Register::new("rax"));
+        ins.add_argument(Register::new("rbx"));
+        assert_eq!(Instruction::try_from("mov %rax, %rbx"),  Ok(ins));
 
+        assert!(Instruction::try_from("mov;").is_err());
+    }
+
+
+    #[test]
+    fn to_string() {
         let mut ins = Instruction::new("nop");
         assert_eq!(&ins.to_string(), "nop");
 

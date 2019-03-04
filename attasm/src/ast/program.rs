@@ -6,7 +6,16 @@ use std::iter::FromIterator;
 use std::vec::IntoIter as VecIntoIter;
 use std::slice::Iter as SliceIter;
 
+use pest::error::Error as PestError;
+use pest::Parser as PestParser;
+
+use crate::parser::Parser;
+use crate::parser::Rule;
+use super::Label;
 use super::Line;
+use super::Literal;
+use super::Instruction;
+use super::Register;
 
 /// An assembler program written in AT&T syntax.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -63,4 +72,58 @@ impl<'a> Display for Program<'a> {
         }
         Ok(())
     }
+}
+
+impl<'a> TryFrom<&'a str> for Program<'a> {
+    type Error = PestError<Rule>;
+    fn try_from(s: &'a str) -> Result<Self, PestError<Rule>> {
+        Parser::parse(Rule::program, s)
+            .and_then(|mut pairs| {
+                let mut lines = Vec::new();
+                for pair in pairs {
+                    match pair.as_rule() {
+                        Rule::EOI => (),
+                        Rule::labeldecl => {
+                            let label = pair.into_inner().next().unwrap();
+                            lines.push(Label::try_from(label.as_str())?.into())
+                        }
+                        Rule::instruction => {
+                            let ins = Instruction::try_from(pair.as_str())?;
+                            lines.push(ins.into())
+                        }
+                        x => unreachable!("{:?}", x),
+                    }
+                }
+                Ok(Self::from(lines))
+            })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn parse() {
+
+        let program =
+            Program::try_from("start:\n\tmov\t$10, %rax\ninc\t%rbx")
+            .unwrap();
+
+        let mut lines = program.lines().iter();
+        assert_eq!(lines.next(), Some(&Line::LabelLine(Label::new("start"))));
+        assert_eq!(lines.next(), Some(&Line::OpLine(
+            Instruction::with_args("mov",
+                vec![
+                    Literal::Dec(10).into(),
+                    Register::new("rax").into()
+                ]
+            )
+        )))
+
+
+    }
+
+
 }
