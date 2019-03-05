@@ -1,13 +1,13 @@
-use asm::Arg;
-use asm::AsmProgram;
-use asm::Line;
+use attasm::ast::Arg;
+use attasm::ast::Program;
+use attasm::ast::Line;
 use kappa::Init;
 
 pub fn units(count: usize) -> Init {
     Init::with_agent(count, agent!(UNIT(prev[.], next[.], r{_none})))
 }
 
-pub fn program(asm: &AsmProgram) -> Init {
+pub fn program(asm: &Program) -> Init {
     let mut chain = Init::new(1);
     chain.agent(agent!(MACHINE(state { run }, ip[0])));
 

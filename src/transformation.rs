@@ -1,13 +1,14 @@
 use std::iter::repeat;
 
-use asm::Arg;
-use asm::AsmProgram;
-use asm::Instruction;
-use asm::Line;
-use asm::Label;
-use asm::Register;
+use attasm::ast::Arg;
+use attasm::ast::Program;
+use attasm::ast::Instruction;
+use attasm::ast::Line;
+use attasm::ast::Label;
+use attasm::ast::Literal;
+use attasm::ast::Register;
 
-pub fn desugar_mov<'a, 'b>(asm: &'b mut AsmProgram<'a>) -> &'b mut AsmProgram<'a> {
+pub fn desugar_mov<'a, 'b>(asm: &'b mut Program<'a>) -> &'b mut Program<'a> {
     // change program lines inplace
     let len = asm.lines().len();
     let lines = std::mem::replace(asm.lines_mut(), Vec::with_capacity(len));
@@ -27,7 +28,14 @@ pub fn desugar_mov<'a, 'b>(asm: &'b mut AsmProgram<'a>) -> &'b mut AsmProgram<'a
                             new.push(Line::OpLine(new_ins.clone()));
                             // inc(r)
                             new_ins.set_mnemonic("inc");
-                            new.extend(repeat(new_ins.into()).take(lit.value()));
+                            match lit {
+                                Literal::Dec(n) | Literal::Oct(n) | Literal::Hex(n) => {
+                                    new.extend(repeat(new_ins.into()).take(*n));
+                                }
+                                _ => panic!("unsupported: {}", ins),
+                            }
+
+
                         }
                         _ => new.push(ins.into()),
                     }
@@ -42,7 +50,7 @@ pub fn desugar_mov<'a, 'b>(asm: &'b mut AsmProgram<'a>) -> &'b mut AsmProgram<'a
     asm
 }
 
-pub fn impl_cpy<'a, 'b>(asm: &'b mut AsmProgram<'a>) -> &'b mut AsmProgram<'a> {
+pub fn impl_cpy<'a, 'b>(asm: &'b mut Program<'a>) -> &'b mut Program<'a> {
 
     let lines = std::mem::replace(asm.lines_mut(), Vec::new());
     let new = asm.lines_mut();

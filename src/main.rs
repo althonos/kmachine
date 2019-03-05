@@ -1,9 +1,10 @@
+#![feature(try_from)]
 #![allow(unused_macros)]
 
 #[macro_use]
 extern crate kappa;
 
-extern crate asm;
+extern crate attasm;
 extern crate indexmap;
 
 #[macro_use]
@@ -14,10 +15,10 @@ mod inits;
 mod rules;
 mod transformation;
 
+use std::convert::TryFrom;
 use std::io::Read;
 
-use asm::AsmParser;
-use asm::AttParser;
+use attasm::ast::Program as AsmProgram;
 use indexmap::IndexSet;
 use kappa::AlgebraicExpression;
 use kappa::KappaProgram;
@@ -31,7 +32,7 @@ fn main() {
         file.read_to_string(&mut program).unwrap();
 
         // Parse the ASM program
-        let mut asm = AttParser::parse_asm(&program);
+        let mut asm = AsmProgram::try_from(&program as &str).unwrap();
 
         // Collect all registers declared in the original program
         let public_registers: IndexSet<String> = asm.registers().into_iter().map(|r| r.name().to_string()).collect();
@@ -41,10 +42,10 @@ fn main() {
         transformation::impl_cpy(&mut asm);
 
         // Collect all registers used in the program.
-        let registers: IndexSet<_> = asm.registers().into_iter().map(|r| r.name()).collect();
+        let registers: IndexSet<_> = asm.registers().iter().map(|r| r.name()).collect();
 
         // Collect all labels declared in the program.
-        let labels: IndexSet<_> = asm.labels().into_iter().map(|l| l.name()).collect();
+        let labels: IndexSet<_> = asm.labels().iter().map(|l| l.name()).collect();
 
         // Compile the CM program into a Kappa source
         let mut program = KappaProgram::new();

@@ -9,15 +9,14 @@ indexmap = "1.0"
 # pest = "2.1"
 # pest_derive = "2.1"
 
-[dependencies.asm]
-path = "./asm"
+[dependencies.attasm]
+path = "./attasm"
 
 [dependencies.kappa]
 path = "./kappa"
 
 [workspace]
 members = [
-  "asm",
   "attasm",
   "kappa"
 ]
