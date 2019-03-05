@@ -6,12 +6,15 @@ use std::iter::FromIterator;
 use std::slice::Iter as SliceIter;
 use std::vec::IntoIter as VecIntoIter;
 
+use indexmap::IndexSet;
 use pest::error::Error as PestError;
 use pest::Parser as PestParser;
 
+use super::Arg;
 use super::Instruction;
 use super::Label;
 use super::Line;
+use super::Register;
 use crate::parser::Parser;
 use crate::parser::Rule;
 
@@ -22,9 +25,65 @@ pub struct Program<'a> {
 }
 
 impl<'a> Program<'a> {
+
     pub fn lines(&self) -> &Vec<Line<'a>> {
         &self.lines
     }
+
+    pub fn lines_mut(&mut self) -> &mut Vec<Line<'a>> {
+        &mut self.lines
+    }
+
+    /// Get the set of all labels *declared* in the program.
+    ///
+    /// This does not include labels that are used as arguments to jumping
+    /// instructions such as `jz`.
+    ///
+    /// ## Example
+    /// ```rust
+    /// # #[macro_use]
+    /// # extern crate indexmap;
+    /// # use asm::{AttParser, AsmParser, AsmProgram, Label};
+    /// # pub fn main() {
+    /// let program: AsmProgram = AttParser::parse_asm(
+    ///     "
+    ///     label1:
+    ///         inc %rax
+    ///         jz  %rax, label2
+    ///     "
+    /// );
+    ///
+    /// let label = Label::new("label1");
+    /// assert_eq!(program.labels(), indexset!{&label});
+    /// # }
+    /// ```
+    pub fn labels(&self) -> IndexSet<&Label<'a>> {
+        self.lines()
+            .into_iter()
+            .flat_map(|ref line| match line {
+                Line::LabelLine(l) => Some(l),
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// Get the set of all registers *used* in the program.
+    pub fn registers(&self) -> IndexSet<&Register<'a>> {
+        self.lines()
+            .into_iter()
+            .flat_map(|ref line| match line {
+                Line::LabelLine(_) => None,
+                Line::OpLine(ins) => Some(
+                    ins.arguments().iter().flat_map(|arg| match arg {
+                        Arg::Register(r) => Some(r),
+                        _ => None,
+                    })
+                ),
+            })
+            .flatten()
+            .collect()
+    }
+
 }
 
 impl<'a> From<Vec<Line<'a>>> for Program<'a> {
