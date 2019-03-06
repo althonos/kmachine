@@ -25,7 +25,6 @@ pub struct Program<'a> {
 }
 
 impl<'a> Program<'a> {
-
     pub fn lines(&self) -> &Vec<Line<'a>> {
         &self.lines
     }
@@ -73,17 +72,14 @@ impl<'a> Program<'a> {
             .into_iter()
             .flat_map(|ref line| match line {
                 Line::LabelLine(_) => None,
-                Line::OpLine(ins) => Some(
-                    ins.arguments().iter().flat_map(|arg| match arg {
-                        Arg::Register(r) => Some(r),
-                        _ => None,
-                    })
-                ),
+                Line::OpLine(ins) => Some(ins.arguments().iter().flat_map(|arg| match arg {
+                    Arg::Register(r) => Some(r),
+                    _ => None,
+                })),
             })
             .flatten()
             .collect()
     }
-
 }
 
 impl<'a> From<Vec<Line<'a>>> for Program<'a> {

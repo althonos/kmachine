@@ -30,7 +30,6 @@ use kappa::Pattern;
 
 fn main() {
     for filename in std::env::args_os().skip(1).map(PathBuf::from) {
-
         // Read the ASM program
         let mut file = std::fs::File::open(&filename).unwrap();
         let mut program = String::new();
@@ -40,7 +39,11 @@ fn main() {
         let mut asm = AsmProgram::try_from(&program as &str).unwrap();
 
         // Collect all registers declared in the original program
-        let public_registers: IndexSet<String> = asm.registers().into_iter().map(|r| r.name().to_string()).collect();
+        let public_registers: IndexSet<String> = asm
+            .registers()
+            .into_iter()
+            .map(|r| r.name().to_string())
+            .collect();
 
         // Run program transformations
         transformation::desugar_mov(&mut asm);

@@ -72,35 +72,16 @@ pub mod instructions {
 
     use super::Agent;
 
-    pub fn lbl<L, SL>(labels: L) -> Agent
-    where
-        L: IntoIterator<Item = SL>,
-        SL: AsRef<str>,
-    {
-        // Agent with baseline sites
-        let mut site;
-        let mut agent = agent!(LBL(prog[ins.PROG]));
-
-        // Add one state to the l site for each label
-        site = site!(l);
-        for label in labels.into_iter() {
-            site.state(label.as_ref());
-        }
-        agent.site(site);
-
-        agent
-    }
-
-    pub fn inc<R, SR>(registers: R) -> Agent
+    pub fn clr<R, SR>(registers: R) -> Agent
     where
         R: IntoIterator<Item = SR>,
         SR: AsRef<str>,
     {
         // Agent with baseline sites
         let mut site;
-        let mut agent = agent!(INC(prog[ins.PROG]));
+        let mut agent = agent!(CLR(prog[ins.PROG]));
 
-        // Add one state to the r site for each register
+        // Add one state to the `r` site for each register
         site = site!(r);
         for register in registers.into_iter() {
             site.state(register.as_ref());
@@ -129,23 +110,33 @@ pub mod instructions {
         agent
     }
 
-    pub fn jz<R, SR, L, SL>(registers: R, labels: L) -> Agent
+    pub fn inc<R, SR>(registers: R) -> Agent
     where
         R: IntoIterator<Item = SR>,
-        L: IntoIterator<Item = SL>,
         SR: AsRef<str>,
-        SL: AsRef<str>,
     {
         // Agent with baseline sites
         let mut site;
-        let mut agent = agent!(JZ(prog[ins.PROG]));
+        let mut agent = agent!(INC(prog[ins.PROG]));
 
-        // Add one state to the `r` site for each register
+        // Add one state to the r site for each register
         site = site!(r);
         for register in registers.into_iter() {
             site.state(register.as_ref());
         }
         agent.site(site);
+
+        agent
+    }
+
+    pub fn jmp<L, SL>(labels: L) -> Agent
+    where
+        L: IntoIterator<Item = SL>,
+        SL: AsRef<str>,
+    {
+        // Agent with baseline sites
+        let mut site;
+        let mut agent = agent!(JMP(prog[ins.PROG]));
 
         // Add one state to the `l` site for each label
         site = site!(l);
@@ -185,14 +176,23 @@ pub mod instructions {
         agent
     }
 
-    pub fn jmp<L, SL>(labels: L) -> Agent
+    pub fn jz<R, SR, L, SL>(registers: R, labels: L) -> Agent
     where
+        R: IntoIterator<Item = SR>,
         L: IntoIterator<Item = SL>,
+        SR: AsRef<str>,
         SL: AsRef<str>,
     {
         // Agent with baseline sites
         let mut site;
-        let mut agent = agent!(JMP(prog[ins.PROG]));
+        let mut agent = agent!(JZ(prog[ins.PROG]));
+
+        // Add one state to the `r` site for each register
+        site = site!(r);
+        for register in registers.into_iter() {
+            site.state(register.as_ref());
+        }
+        agent.site(site);
 
         // Add one state to the `l` site for each label
         site = site!(l);
@@ -204,19 +204,19 @@ pub mod instructions {
         agent
     }
 
-    pub fn clr<R, SR>(registers: R) -> Agent
+    pub fn lbl<L, SL>(labels: L) -> Agent
     where
-        R: IntoIterator<Item = SR>,
-        SR: AsRef<str>,
+        L: IntoIterator<Item = SL>,
+        SL: AsRef<str>,
     {
         // Agent with baseline sites
         let mut site;
-        let mut agent = agent!(CLR(prog[ins.PROG]));
+        let mut agent = agent!(LBL(prog[ins.PROG]));
 
-        // Add one state to the `r` site for each register
-        site = site!(r);
-        for register in registers.into_iter() {
-            site.state(register.as_ref());
+        // Add one state to the l site for each label
+        site = site!(l);
+        for label in labels.into_iter() {
+            site.state(label.as_ref());
         }
         agent.site(site);
 

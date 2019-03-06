@@ -1,19 +1,5 @@
 use kappa::Rule;
 
-pub fn next() -> Rule {
-    rule!(
-        "move" {
-            MACHINE(ip[0], state{next}),
-            PROG(cm[0], next[1]),
-            PROG(cm[.], prev[1]),
-        } => {
-            MACHINE(ip[0], state{run}),
-            PROG(cm[.], next[1]),
-            PROG(cm[0], prev[1]),
-        } @ 1.0
-    )
-}
-
 pub fn bind(label: &str) -> Rule {
     let name = format!("bind | target == {0}", label);
 
@@ -26,6 +12,20 @@ pub fn bind(label: &str) -> Rule {
             MACHINE(ip[1], state{run}, target{_none}),
             PROG(cm[1], ins[0]),
             LBL(prog[0], l{?label})
+        } @ 1.0
+    )
+}
+
+pub fn next() -> Rule {
+    rule!(
+        "move" {
+            MACHINE(ip[0], state{next}),
+            PROG(cm[0], next[1]),
+            PROG(cm[.], prev[1]),
+        } => {
+            MACHINE(ip[0], state{run}),
+            PROG(cm[.], next[1]),
+            PROG(cm[0], prev[1]),
         } @ 1.0
     )
 }
@@ -60,54 +60,36 @@ pub mod instructions {
 
     use super::Rule;
 
-    pub fn lbl() -> Rule {
-        rule!(
-            "label" {
-                MACHINE(ip[0], state{run}),
-                PROG(cm[0], ins[1]),
-                LBL(prog[1])
-            } => {
-                MACHINE(ip[0], state{next}),
-                PROG(cm[0], ins[1]),
-                LBL(prog[1])
-            } @ 1.0
-        )
-    }
-
-    pub fn inc_zero(reg: &str) -> Rule {
-        let name = format!("inc({0}) | {0} == 0", reg);
+    pub fn clr_zero(reg: &str) -> Rule {
+        let name = format!("clr({0}) | {0} == 0", reg);
 
         rule!(
             ?name {
                 MACHINE(ip[0], state{run}, ?reg[.]),
                 PROG(cm[0], ins[1]),
-                INC(prog[1], r{?reg}),
-                UNIT(prev[.], next[.], r{_none}),
+                CLR(prog[1], r{?reg})
             } => {
-                MACHINE(ip[0], state{next}, ?reg[2]),
+                MACHINE(ip[0], state{next}, ?reg[.]),
                 PROG(cm[0], ins[1]),
-                INC(prog[1], r{?reg}),
-                UNIT(prev[2], next[.], r{?reg}),
+                CLR(prog[1], r{?reg})
             } @ 1.0
         )
     }
 
-    pub fn inc_nonzero(reg: &str) -> Rule {
-        let name = format!("inc({0}) | {0} != 0", reg);
+    pub fn clr_nonzero(reg: &str) -> Rule {
+        let name = format!("clr({0}) | {0} == 1", reg);
 
         rule!(
             ?name {
                 MACHINE(ip[0], state{run}, ?reg[2]),
                 PROG(cm[0], ins[1]),
-                INC(prog[1], r{?reg}),
-                UNIT(prev[2]),
-                UNIT(prev[.], next[.], r{_none}),
+                CLR(prog[1], r{?reg}),
+                UNIT(prev[2], r{?reg}),
             } => {
-                MACHINE(ip[0], state{next}, ?reg[2]),
+                MACHINE(ip[0], state{next}, ?reg[.]),
                 PROG(cm[0], ins[1]),
-                INC(prog[1], r{?reg}),
-                UNIT(prev[3]),
-                UNIT(prev[2], next[3], r{?reg}),
+                CLR(prog[1], r{?reg}),
+                UNIT(prev[.], r{_none}),
             } @ 1.0
         )
     }
@@ -166,36 +148,40 @@ pub mod instructions {
         )
     }
 
-    pub fn clr_zero(reg: &str) -> Rule {
-        let name = format!("clr({0}) | {0} == 0", reg);
+    pub fn inc_zero(reg: &str) -> Rule {
+        let name = format!("inc({0}) | {0} == 0", reg);
 
         rule!(
             ?name {
                 MACHINE(ip[0], state{run}, ?reg[.]),
                 PROG(cm[0], ins[1]),
-                CLR(prog[1], r{?reg})
+                INC(prog[1], r{?reg}),
+                UNIT(prev[.], next[.], r{_none}),
             } => {
-                MACHINE(ip[0], state{next}, ?reg[.]),
+                MACHINE(ip[0], state{next}, ?reg[2]),
                 PROG(cm[0], ins[1]),
-                CLR(prog[1], r{?reg})
+                INC(prog[1], r{?reg}),
+                UNIT(prev[2], next[.], r{?reg}),
             } @ 1.0
         )
     }
 
-    pub fn clr_nonzero(reg: &str) -> Rule {
-        let name = format!("clr({0}) | {0} == 1", reg);
+    pub fn inc_nonzero(reg: &str) -> Rule {
+        let name = format!("inc({0}) | {0} != 0", reg);
 
         rule!(
             ?name {
                 MACHINE(ip[0], state{run}, ?reg[2]),
                 PROG(cm[0], ins[1]),
-                CLR(prog[1], r{?reg}),
-                UNIT(prev[2], r{?reg}),
+                INC(prog[1], r{?reg}),
+                UNIT(prev[2]),
+                UNIT(prev[.], next[.], r{_none}),
             } => {
-                MACHINE(ip[0], state{next}, ?reg[.]),
+                MACHINE(ip[0], state{next}, ?reg[2]),
                 PROG(cm[0], ins[1]),
-                CLR(prog[1], r{?reg}),
-                UNIT(prev[.], r{_none}),
+                INC(prog[1], r{?reg}),
+                UNIT(prev[3]),
+                UNIT(prev[2], next[3], r{?reg}),
             } @ 1.0
         )
     }
@@ -276,6 +262,20 @@ pub mod instructions {
                 MACHINE(ip[.], state{bind}, ?reg[.], target{?label}),
                 PROG(cm[.], ins[1]),
                 JZ(prog[1], r{?reg}, l{?label}),
+            } @ 1.0
+        )
+    }
+
+    pub fn lbl() -> Rule {
+        rule!(
+            "label" {
+                MACHINE(ip[0], state{run}),
+                PROG(cm[0], ins[1]),
+                LBL(prog[1])
+            } => {
+                MACHINE(ip[0], state{next}),
+                PROG(cm[0], ins[1]),
+                LBL(prog[1])
             } @ 1.0
         )
     }

@@ -1,11 +1,11 @@
 use std::iter::repeat;
 
 use attasm::ast::Arg;
-use attasm::ast::Program;
 use attasm::ast::Instruction;
-use attasm::ast::Line;
 use attasm::ast::Label;
+use attasm::ast::Line;
 use attasm::ast::Literal;
+use attasm::ast::Program;
 use attasm::ast::Register;
 
 pub fn desugar_mov<'a, 'b>(asm: &'b mut Program<'a>) -> &'b mut Program<'a> {
@@ -34,11 +34,9 @@ pub fn desugar_mov<'a, 'b>(asm: &'b mut Program<'a>) -> &'b mut Program<'a> {
                                 }
                                 _ => panic!("unsupported: {}", ins),
                             }
-
-
                         }
                         _ => new.push(ins.into()),
-                    }
+                    },
                     _ => new.push(ins.into()),
                 };
             }
@@ -51,7 +49,6 @@ pub fn desugar_mov<'a, 'b>(asm: &'b mut Program<'a>) -> &'b mut Program<'a> {
 }
 
 pub fn impl_cpy<'a, 'b>(asm: &'b mut Program<'a>) -> &'b mut Program<'a> {
-
     let lines = std::mem::replace(asm.lines_mut(), Vec::new());
     let new = asm.lines_mut();
 
@@ -79,7 +76,10 @@ pub fn impl_cpy<'a, 'b>(asm: &'b mut Program<'a>) -> &'b mut Program<'a> {
                 new_ins.add_argument(cpy.clone());
                 new.push(new_ins.into());
                 // _cpy_i:
-                let labelname = format!("_cpy_{}", {i += 1; i});
+                let labelname = format!("_cpy_{}", {
+                    i += 1;
+                    i
+                });
                 new_label = Label::new(labelname.clone());
                 new.push(new_label.clone().into());
                 // inc %src

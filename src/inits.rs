@@ -1,6 +1,6 @@
 use attasm::ast::Arg;
-use attasm::ast::Program;
 use attasm::ast::Line;
+use attasm::ast::Program;
 use kappa::Init;
 
 pub fn units(count: usize) -> Init {
