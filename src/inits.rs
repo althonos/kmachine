@@ -29,6 +29,15 @@ pub fn program(asm: &Program) -> Init {
                 agent!(LBL(prog[?idx_prog], l{?label}))
             }
             Line::OpLine(ins) => match ins.mnemonic() {
+                "add" => {
+                    let (src, dst) = args!(ins, add(Arg::Register, Arg::Register));
+                    let s = src.name().as_ref();
+                    let d = dst.name().as_ref();
+                    if src == dst {
+                        panic!("invalid arguments for instruction `add`: {}, {}", s, d);
+                    }
+                    agent!(ADD(prog[?idx_prog], src{?s}, dst{?d}))
+                }
                 "clr" => {
                     let (register,) = args!(ins, clr(Arg::Register));
                     let r = register.name().as_ref();
@@ -44,22 +53,23 @@ pub fn program(asm: &Program) -> Init {
                     let r = register.name().as_ref();
                     agent!(INC(prog[?idx_prog], r{?r}))
                 }
-                "jz" => {
-                    let (register, label) = args!(ins, jz(Arg::Register, Arg::Label));
-                    let r = register.name().as_ref();
+                "jmp" => {
+                    let (label,) = args!(ins, jmp(Arg::Label));
                     let l = label.name().as_ref();
-                    agent!(JZ(prog[?idx_prog], r{?r}, l{?l}))
+                    agent!(JMP(prog[?idx_prog], l{?l}))
                 }
+
                 "jnz" => {
                     let (register, label) = args!(ins, jz(Arg::Register, Arg::Label));
                     let r = register.name().as_ref();
                     let l = label.name().as_ref();
                     agent!(JNZ(prog[?idx_prog], r{?r}, l{?l}))
                 }
-                "jmp" => {
-                    let (label,) = args!(ins, jmp(Arg::Label));
+                "jz" => {
+                    let (register, label) = args!(ins, jz(Arg::Register, Arg::Label));
+                    let r = register.name().as_ref();
                     let l = label.name().as_ref();
-                    agent!(JMP(prog[?idx_prog], l{?l}))
+                    agent!(JZ(prog[?idx_prog], r{?r}, l{?l}))
                 }
                 "mov" => {
                     let (src, dst) = args!(ins, mov(Arg::Register, Arg::Register));

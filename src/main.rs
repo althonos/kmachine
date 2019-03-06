@@ -71,12 +71,13 @@ fn main() {
             // instructions
             .agent(agents::prog())
             // pseudo-operands
+            .agent(agents::instructions::add(&registers))
             .agent(agents::instructions::clr(&registers))
             .agent(agents::instructions::dec(&registers))
             .agent(agents::instructions::inc(&registers))
             .agent(agents::instructions::jmp(&labels))
-            .agent(agents::instructions::jz(&registers, &labels))
             .agent(agents::instructions::jnz(&registers, &labels))
+            .agent(agents::instructions::jz(&registers, &labels))
             .agent(agents::instructions::lbl(&labels))
             .agent(agents::instructions::mov(&registers));
 
@@ -88,15 +89,15 @@ fn main() {
         // Build register-dependent rules
         for register in registers.iter() {
             program
-                .rule(rules::instructions::inc_nonzero(register))
-                .rule(rules::instructions::inc_zero(register))
+                .rule(rules::instructions::clr_zero(register))
+                .rule(rules::instructions::clr_nonzero(register))
                 .rule(rules::instructions::dec_zero(register))
                 .rule(rules::instructions::dec_one(register))
                 .rule(rules::instructions::dec_more(register))
-                .rule(rules::instructions::jz_nonzero(register))
+                .rule(rules::instructions::inc_nonzero(register))
+                .rule(rules::instructions::inc_zero(register))
                 .rule(rules::instructions::jnz_zero(register))
-                .rule(rules::instructions::clr_zero(register))
-                .rule(rules::instructions::clr_nonzero(register));
+                .rule(rules::instructions::jz_nonzero(register));
         }
         // Build label-dependent rules
         for label in labels.iter() {
@@ -118,6 +119,8 @@ fn main() {
                 if src != dst {
                     program
                         .rule(rules::relabel_units(src, dst))
+                        .rule(rules::instructions::add_zero(src, dst))
+                        .rule(rules::instructions::add_nonzero(src, dst))
                         .rule(rules::instructions::mov_zero(src, dst))
                         .rule(rules::instructions::mov_nonzero(src, dst));
                 }

@@ -29,6 +29,7 @@ pub fn prog() -> Agent {
             next[prev.PROG],
             cm[ip.MACHINE],
             ins[
+                prog.ADD,
                 prog.CLR,
                 prog.DEC,
                 prog.INC,
@@ -71,6 +72,27 @@ where
 pub mod instructions {
 
     use super::Agent;
+
+    pub fn add<R, SR>(registers: R) -> Agent
+    where
+        R: IntoIterator<Item = SR>,
+        SR: AsRef<str>,
+    {
+        // Agent with baseline sites
+        let mut agent = agent!(ADD(prog[ins.PROG]));
+
+        // Add `src` and `dst` site for each register
+        let mut src = site!(src);
+        let mut dst = site!(dst);
+        for register in registers.into_iter() {
+            src.state(register.as_ref());
+            dst.state(register.as_ref());
+        }
+        agent.site(src);
+        agent.site(dst);
+
+        agent
+    }
 
     pub fn clr<R, SR>(registers: R) -> Agent
     where
