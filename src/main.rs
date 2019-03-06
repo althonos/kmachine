@@ -17,6 +17,9 @@ mod transformation;
 
 use std::convert::TryFrom;
 use std::io::Read;
+use std::io::Write;
+use std::path::PathBuf;
+use std::str::FromStr;
 
 use attasm::ast::Program as AsmProgram;
 use indexmap::IndexSet;
@@ -26,12 +29,14 @@ use kappa::Observable;
 use kappa::Pattern;
 
 fn main() {
-    for filename in std::env::args().skip(1) {
+    for filename in std::env::args_os().skip(1).map(PathBuf::from) {
+
+        // Read the ASM program
         let mut file = std::fs::File::open(&filename).unwrap();
         let mut program = String::new();
         file.read_to_string(&mut program).unwrap();
 
-        // Parse the ASM program
+        // Parse the ASM code
         let mut asm = AsmProgram::try_from(&program as &str).unwrap();
 
         // Collect all registers declared in the original program
@@ -40,6 +45,10 @@ fn main() {
         // Run program transformations
         transformation::desugar_mov(&mut asm);
         transformation::impl_cpy(&mut asm);
+
+        // Write the transformed ASM program.
+        let mut out_asm = std::fs::File::create(filename.with_extension("desugared.S")).unwrap();
+        write!(out_asm, "{}", asm);
 
         // Collect all registers used in the program.
         let registers: IndexSet<_> = asm.registers().iter().map(|r| r.name()).collect();
@@ -123,6 +132,8 @@ fn main() {
             program.observable(obs);
         }
 
-        println!("// {}\n{:#}", filename, program);
+        // Write the Kappa program.
+        let mut out_ka = std::fs::File::create(filename.with_extension("ka")).unwrap();
+        write!(out_ka, "// {}\n{:#}\n", filename.to_string_lossy(), program);
     }
 }
