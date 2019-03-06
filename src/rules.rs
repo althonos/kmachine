@@ -38,7 +38,7 @@ pub fn reset_units() -> Rule {
         } => {
             UNIT(prev[.], next[.], r{_none}),
             UNIT(prev[.], r{_none})
-        } @ 1.0
+        } @ std::f64::INFINITY
     )
 }
 
@@ -52,7 +52,7 @@ pub fn relabel_units(r1: &str, r2: &str) -> Rule {
         } => {
             UNIT(prev[_], next[0], r{?r1}),
             UNIT(prev[0], r{?r1})
-        } @ 1.0
+        } @ std::f64::INFINITY
     )
 }
 
