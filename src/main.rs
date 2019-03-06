@@ -47,6 +47,7 @@ fn main() {
 
         // Run program transformations
         transformation::desugar_literals(&mut asm);
+        transformation::impl_mul(&mut asm);
         transformation::impl_cpy(&mut asm);
 
         // Write the transformed ASM program.
@@ -119,7 +120,8 @@ fn main() {
                 if src != dst {
                     program
                         .rule(rules::relabel_units(src, dst))
-                        .rule(rules::instructions::add_zero(src, dst))
+                        .rule(rules::instructions::add_zerosrc(src, dst))
+                        .rule(rules::instructions::add_zerodst(src, dst))
                         .rule(rules::instructions::add_nonzero(src, dst))
                         .rule(rules::instructions::mov_zero(src, dst))
                         .rule(rules::instructions::mov_nonzero(src, dst));

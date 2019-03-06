@@ -60,7 +60,7 @@ pub mod instructions {
 
     use super::Rule;
 
-    pub fn add_zero(src: &str, dst: &str) -> Rule {
+    pub fn add_zerosrc(src: &str, dst: &str) -> Rule {
         let name = format!("add({0}, {1}) | {0} == 0", src, dst);
 
         rule!(
@@ -76,6 +76,24 @@ pub mod instructions {
         )
     }
 
+    pub fn add_zerodst(src: &str, dst: &str) -> Rule {
+        let name = format!("add({0}, {1}) | {1} == 0", src, dst);
+
+        rule!(
+            ?name {
+                MACHINE(ip[0], state{run}, ?src[2], ?dst[.]),
+                PROG(cm[0], ins[1]),
+                ADD(prog[1], src{?src}, dst{?dst}),
+                UNIT(prev[2], r{?src}),
+            } => {
+                MACHINE(ip[0], state{next}, ?src[.], ?dst[2]),
+                PROG(cm[0], ins[1]),
+                ADD(prog[1], src{?src}, dst{?dst}),
+                UNIT(prev[2], r{?dst}),
+            } @ 1.0
+        )
+    }
+
     pub fn add_nonzero(src: &str, dst: &str) -> Rule {
         let name = format!("add({0}, {1}) | {0} != 0", src, dst);
 
@@ -83,13 +101,13 @@ pub mod instructions {
             ?name {
                 MACHINE(ip[0], state{run}, ?src[2], ?dst[_]),
                 PROG(cm[0], ins[1]),
-                MOV(prog[1], src{?src}, dst{?dst}),
+                ADD(prog[1], src{?src}, dst{?dst}),
                 UNIT(prev[2], r{?src}),                    // Unit linked to %src
                 UNIT(next[.], r{?dst}),                    // Top unit of %dst stack
             } => {
                 MACHINE(ip[0], state{next}, ?src[.], ?dst[_]),
                 PROG(cm[0], ins[1]),
-                MOV(prog[1], src{?src}, dst{?dst}),
+                ADD(prog[1], src{?src}, dst{?dst}),
                 UNIT(prev[2], r{?dst}),
                 UNIT(next[2], r{?dst})
             } @ 1.0
