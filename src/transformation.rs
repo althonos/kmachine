@@ -8,7 +8,7 @@ use attasm::ast::Literal;
 use attasm::ast::Program;
 use attasm::ast::Register;
 
-pub fn desugar_mov<'a, 'b>(asm: &'b mut Program<'a>) -> &'b mut Program<'a> {
+pub fn desugar_literals<'a, 'b>(asm: &'b mut Program<'a>) -> &'b mut Program<'a> {
     // change program lines inplace
     let len = asm.lines().len();
     let lines = std::mem::replace(asm.lines_mut(), Vec::with_capacity(len));
@@ -19,15 +19,19 @@ pub fn desugar_mov<'a, 'b>(asm: &'b mut Program<'a>) -> &'b mut Program<'a> {
         match line {
             Line::OpLine(ins) => {
                 match ins.mnemonic() {
-                    "mov" => match ins.arguments().first() {
+                    "mov" | "add" => match ins.arguments().first() {
                         Some(Arg::Literal(_)) => {
+                            let mut new_ins;
                             let (lit, reg) = args!(ins, mov(Arg::Literal, Arg::Register));
                             // clr(r)
-                            let mut new_ins = Instruction::new("clr");
-                            new_ins.add_argument(reg.clone());
-                            new.push(Line::OpLine(new_ins.clone()));
+                            if ins.mnemonic() == "mov" {
+                                new_ins = Instruction::new("clr");
+                                new_ins.add_argument(Arg::Register(reg.clone()));
+                                new.push(Line::OpLine(new_ins));
+                            }
                             // inc(r)
-                            new_ins.set_mnemonic("inc");
+                            new_ins = Instruction::new("inc");
+                            new_ins.add_argument(Arg::Register(reg.clone()));
                             match lit {
                                 Literal::Dec(n) | Literal::Oct(n) | Literal::Hex(n) => {
                                     new.extend(repeat(new_ins.into()).take(*n));

@@ -30,7 +30,7 @@ impl<'a> Instruction<'a> {
         }
     }
 
-    pub fn with_args<M, A>(mnemonic: M, args: A) -> Self
+    pub fn with_arguments<M, A>(mnemonic: M, args: A) -> Self
     where
         M: Into<Cow<'a, str>>,
         A: IntoIterator<Item = Arg<'a>>,
@@ -96,7 +96,7 @@ impl<'a> TryFrom<&'a str> for Instruction<'a> {
                 args.push(Arg::try_from(pair.as_str())?);
             }
 
-            Ok(Self::with_args(op, args))
+            Ok(Self::with_arguments(op, args))
         })
     }
 }

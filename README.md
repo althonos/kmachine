@@ -50,13 +50,16 @@ Or you can open it with the `KUI` to inspect the generated agents and rules:
 
 | Instruction | Supported | Emulated | Example          |
 | :---------: | :-------: | :------: | :--------------- |
+|    `add`    |     ✓     |          | `add %rax, %rbx` |
+|    `add` *  |           |     ✓    | `add $0x12, %rbx` |
 |    `clr`    |     ✓     |          | `clr %rax`       |
-|    `cpy`    |           |    ✓     | `cpy %rax, %rbx` |
+|    `cpy`    |           |     ✓    | `cpy %rax, %rbx` |
 |    `inc`    |     ✓     |          | `inc %rcx`       |
 |    `jmp`    |     ✓     |          | `jmp label`      |
 |    `jnz`    |     ✓     |          | `jnz %rax, label`|
 |    `jz`     |     ✓     |          | `jz  %rax, label`|
-|    `mov`    |           |     ✓    | `mov $5, %rax`   |
+|    `mov`    |     ✓     |          | `mov %rax, %rbx` |
+|    `mov` *  |           |     ✓    | `mov $5, %rax`   |
 
 
 ## About

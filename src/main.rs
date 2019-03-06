@@ -46,7 +46,7 @@ fn main() {
             .collect();
 
         // Run program transformations
-        transformation::desugar_mov(&mut asm);
+        transformation::desugar_literals(&mut asm);
         transformation::impl_cpy(&mut asm);
 
         // Write the transformed ASM program.
