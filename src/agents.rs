@@ -37,7 +37,8 @@ pub fn prog() -> Agent {
                 prog.JNZ,
                 prog.JZ,
                 prog.LBL,
-                prog.MOV
+                prog.MOV,
+                prog.SWP
             ]
         )
     )
@@ -252,6 +253,27 @@ pub mod instructions {
     {
         // Agent with baseline sites
         let mut agent = agent!(MOV(prog[ins.PROG]));
+
+        // Add `src` and `dst` site for each register
+        let mut src = site!(src);
+        let mut dst = site!(dst);
+        for register in registers.into_iter() {
+            src.state(register.as_ref());
+            dst.state(register.as_ref());
+        }
+        agent.site(src);
+        agent.site(dst);
+
+        agent
+    }
+
+    pub fn swp<R, SR>(registers: R) -> Agent
+    where
+        R: IntoIterator<Item = SR>,
+        SR: AsRef<str>,
+    {
+        // Agent with baseline sites
+        let mut agent = agent!(SWP(prog[ins.PROG]));
 
         // Add `src` and `dst` site for each register
         let mut src = site!(src);

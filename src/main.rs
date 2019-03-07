@@ -80,7 +80,8 @@ fn main() {
             .agent(agents::instructions::jnz(&registers, &labels))
             .agent(agents::instructions::jz(&registers, &labels))
             .agent(agents::instructions::lbl(&labels))
-            .agent(agents::instructions::mov(&registers));
+            .agent(agents::instructions::mov(&registers))
+            .agent(agents::instructions::swp(&registers));
 
         // Build static rules
         program
@@ -124,7 +125,11 @@ fn main() {
                         .rule(rules::instructions::add_zerodst(src, dst))
                         .rule(rules::instructions::add_nonzero(src, dst))
                         .rule(rules::instructions::mov_zero(src, dst))
-                        .rule(rules::instructions::mov_nonzero(src, dst));
+                        .rule(rules::instructions::mov_nonzero(src, dst))
+                        .rule(rules::instructions::swp_nonzero(src, dst))
+                        .rule(rules::instructions::swp_zerodst(src, dst))
+                        .rule(rules::instructions::swp_zerosrc(src, dst))
+                        .rule(rules::instructions::swp_zero(src, dst));
                 }
             }
         }

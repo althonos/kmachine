@@ -53,7 +53,6 @@ pub fn desugar_literals<'a, 'b>(asm: &'b mut Program<'a>) -> &'b mut Program<'a>
 }
 
 pub fn impl_cpy<'a, 'b>(asm: &'b mut Program<'a>) -> &'b mut Program<'a> {
-
     let len = asm.lines().len();
     let lines = std::mem::replace(asm.lines_mut(), Vec::with_capacity(len));
     let new = asm.lines_mut();
@@ -114,7 +113,6 @@ pub fn impl_cpy<'a, 'b>(asm: &'b mut Program<'a>) -> &'b mut Program<'a> {
 }
 
 pub fn impl_mul<'a, 'b>(asm: &'b mut Program<'a>) -> &'b mut Program<'a> {
-
     let len = asm.lines().len();
     let lines = std::mem::replace(asm.lines_mut(), Vec::with_capacity(len));
     let new = asm.lines_mut();
@@ -125,11 +123,13 @@ pub fn impl_mul<'a, 'b>(asm: &'b mut Program<'a>) -> &'b mut Program<'a> {
     for line in lines.into_iter() {
         match line {
             Line::OpLine(ref ins) if ins.mnemonic() == "mul" => {
-
                 let mut new_ins: Instruction;
                 let mut new_label: Label;
 
-                let label_loop = format!("_mov_{}_loop", {i += 1; i});
+                let label_loop = format!("_mov_{}_loop", {
+                    i += 1;
+                    i
+                });
                 let label_after = format!("_mov_{}_after", i);
 
                 // extract arguments
@@ -192,5 +192,4 @@ pub fn impl_mul<'a, 'b>(asm: &'b mut Program<'a>) -> &'b mut Program<'a> {
     }
 
     asm
-
 }

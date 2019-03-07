@@ -80,6 +80,15 @@ pub fn program(asm: &Program) -> Init {
                     }
                     agent!(MOV(prog[?idx_prog], src{?s}, dst{?d}))
                 }
+                "swp" => {
+                    let (src, dst) = args!(ins, mov(Arg::Register, Arg::Register));
+                    let s = src.name().as_ref();
+                    let d = dst.name().as_ref();
+                    if src == dst {
+                        panic!("invalid arguments for instruction `swp`: {}, {}", s, d);
+                    }
+                    agent!(SWP(prog[?idx_prog], src{?s}, dst{?d}))
+                }
                 opname => panic!("unknown instruction `{}`", opname),
             },
         });

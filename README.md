@@ -61,6 +61,7 @@ Or you can open it with the `KUI` to inspect the generated agents and rules:
 |    `mov`    |     ✓     |          | `mov %rax, %rbx`  |
 |    `mov` *  |           |     ✓    | `mov $5, %rax`    |
 |    `mul`    |           |     ✓    | `mul %rax, %rbx`  |
+|    `swp`    |     ✓     |          | `swp %rax, %rbx`  |
 
 
 ## About

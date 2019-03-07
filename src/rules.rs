@@ -351,7 +351,7 @@ pub mod instructions {
     }
 
     pub fn mov_nonzero(src: &str, dst: &str) -> Rule {
-        let name = format!("mov({0}, {1}) | {0} != 0", src, dst);
+        let name = format!("mov({0}, {1}) | {0} != 0, {1} == 0", src, dst);
 
         rule!(
             ?name {
@@ -364,6 +364,78 @@ pub mod instructions {
                 PROG(cm[0], ins[1]),
                 MOV(prog[1], src{?src}, dst{?dst}),
                 UNIT(prev[2], r{?dst}),
+            } @ 1.0
+        )
+    }
+
+    pub fn swp_zero(src: &str, dst: &str) -> Rule {
+        let name = format!("swp({0}, {1}) | {0} == {1} == 0", src, dst);
+
+        rule!(
+            ?name {
+                MACHINE(ip[0], state{run}, ?src[.], ?dst[.]),
+                PROG(cm[0], ins[1]),
+                SWP(prog[1], src{?src}, dst{?dst}),
+            } => {
+                MACHINE(ip[0], state{next}, ?src[.], ?dst[.]),
+                PROG(cm[0], ins[1]),
+                SWP(prog[1], src{?src}, dst{?dst}),
+            } @ 1.0
+        )
+    }
+
+    pub fn swp_zerosrc(src: &str, dst: &str) -> Rule {
+        let name = format!("swp({0}, {1}) | {0} == 0, {1} != 0", src, dst);
+
+        rule!(
+            ?name {
+                MACHINE(ip[0], state{run}, ?src[.], ?dst[2]),
+                PROG(cm[0], ins[1]),
+                SWP(prog[1], src{?src}, dst{?dst}),
+                UNIT(prev[2], r{?dst}),
+            } => {
+                MACHINE(ip[0], state{next}, ?src[2], ?dst[.]),
+                PROG(cm[0], ins[1]),
+                SWP(prog[1], src{?src}, dst{?dst}),
+                UNIT(prev[2], r{?src}),
+            } @ 1.0
+        )
+    }
+
+    pub fn swp_zerodst(src: &str, dst: &str) -> Rule {
+        let name = format!("swp({0}, {1}) | {1} == 0", src, dst);
+
+        rule!(
+            ?name {
+                MACHINE(ip[0], state{run}, ?src[2], ?dst[.]),
+                PROG(cm[0], ins[1]),
+                SWP(prog[1], src{?src}, dst{?dst}),
+                UNIT(prev[2], r{?src}),
+            } => {
+                MACHINE(ip[0], state{next}, ?src[.], ?dst[2]),
+                PROG(cm[0], ins[1]),
+                SWP(prog[1], src{?src}, dst{?dst}),
+                UNIT(prev[2], r{?dst}),
+            } @ 1.0
+        )
+    }
+
+    pub fn swp_nonzero(src: &str, dst: &str) -> Rule {
+        let name = format!("swp({0}, {1}) | {0} != 0, {1} != 0", src, dst);
+
+        rule!(
+            ?name {
+                MACHINE(ip[0], state{run}, ?src[2], ?dst[3]),
+                PROG(cm[0], ins[1]),
+                SWP(prog[1], src{?src}, dst{?dst}),
+                UNIT(prev[2], r{?src}),
+                UNIT(prev[3], r{?dst}),
+            } => {
+                MACHINE(ip[0], state{next}, ?src[3], ?dst[2]),
+                PROG(cm[0], ins[1]),
+                SWP(prog[1], src{?src}, dst{?dst}),
+                UNIT(prev[2], r{?dst}),
+                UNIT(prev[3], r{?src}),
             } @ 1.0
         )
     }
