@@ -1,4 +1,4 @@
-# ϰmachine
+# κmachine
 
 *A toy compiler that produces [Kappa] code from [counter machine] instructions.*
 

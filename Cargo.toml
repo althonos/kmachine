@@ -1,22 +1,21 @@
 [package]
-name = "kmachine"
-version = "0.1.0"
-authors = ["Martin Larralde <martin.larralde@ens-paris-saclay.fr>"]
-edition = "2018"
+name        = "kmachine"
+version     = "0.1.0"
+authors     = ["Martin Larralde <martin.larralde@ens-paris-saclay.fr>"]
+license     = "MIT"
+description = "A toy compiler that produces Kappa code from counter machine instructions." 
+repository  = "https://github.com/althonos/kmachine"
+readme      = "README.md"
+keywords    = ["kappa", "biology", "compiler", "counter machine", "Turing machine", "program machine"]
+categories  = ["command-line-utilities"]
+edition     = "2018"
 
 [dependencies]
 indexmap = "1.0"
-# pest = "2.1"
-# pest_derive = "2.1"
-
 [dependencies.attasm]
 path = "./attasm"
-
 [dependencies.kappa]
 path = "./kappa"
 
 [workspace]
-members = [
-  "attasm",
-  "kappa"
-]
+members = ["attasm", "kappa"]
