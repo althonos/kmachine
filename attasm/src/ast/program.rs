@@ -40,17 +40,19 @@ impl<'a> Program<'a> {
     ///
     /// ## Example
     /// ```rust
+    /// # #![feature(try_from)]
     /// # #[macro_use]
     /// # extern crate indexmap;
-    /// # use asm::{AttParser, AsmParser, AsmProgram, Label};
+    /// # use std::convert::TryFrom;
+    /// # use attasm::ast::*;
     /// # pub fn main() {
-    /// let program: AsmProgram = AttParser::parse_asm(
+    /// let program = Program::try_from(
     ///     "
     ///     label1:
     ///         inc %rax
     ///         jz  %rax, label2
     ///     "
-    /// );
+    /// ).unwrap();
     ///
     /// let label = Label::new("label1");
     /// assert_eq!(program.labels(), indexset!{&label});
@@ -162,13 +164,12 @@ mod tests {
 
         let mut lines = program.lines().iter();
         assert_eq!(lines.next(), Some(&Line::LabelLine(Label::new("start"))));
+
+        let args = vec![Literal::Dec(10).into(), Register::new("rax").into()];
         assert_eq!(
             lines.next(),
-            Some(&Line::OpLine(Instruction::with_args(
-                "mov",
-                vec![Literal::Dec(10).into(), Register::new("rax").into()]
-            )))
-        )
+            Some(&Line::OpLine(Instruction::with_arguments("mov", args)))
+        );
     }
 
 }

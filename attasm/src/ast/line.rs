@@ -81,7 +81,7 @@ mod tests {
         let args = vec![Register::new("rax").into(), Register::new("rbx").into()];
         assert_eq!(
             Line::try_from("mov %rax, %rbx"),
-            Ok(Line::OpLine(Instruction::with_args("mov", args)))
+            Ok(Line::OpLine(Instruction::with_arguments("mov", args)))
         );
     }
 
