@@ -130,7 +130,7 @@ fn main() {
         }
 
         // Build static init
-        program.init(inits::units(100)).init(inits::program(&asm));
+        program.init(inits::units(10000)).init(inits::program(&asm));
 
         // Build observables
         for register in public_registers.iter() {
