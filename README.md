@@ -34,7 +34,7 @@ cpy3:
 Provide the compiler with a pseudo-assembly program, and it will generate a
 self-sufficient Kappa source:
 ```console
-$ cargo run -- examples/loop.S > examples/loop.ka
+$ cargo run -- examples/loop.S
 ```
 
 This program can then be run with `KaSim` through the command line:

@@ -6,7 +6,7 @@
 )
 %agent: MACHINE(
     ip[cm.PROG],
-    state{run, mov, jmp},
+    state{run, next, bind},
     rax[prev.UNIT],
     rbx[prev.UNIT],
     target{_none, loop1, loop2}
@@ -15,17 +15,14 @@
     prev[next.PROG],
     next[prev.PROG],
     cm[ip.MACHINE],
-    ins[prog.INC, prog.DEC, prog.JZ, prog.LBL, prog.CLR, prog.JMP]
+    ins[prog.ADD, prog.CLR, prog.DEC, prog.INC, prog.JMP, prog.JNZ, prog.JZ, prog.LBL, prog.MOV, prog.SWP]
 )
-%agent: LBL(
+%agent: ADD(
     prog[ins.PROG],
-    l{loop1, loop2}
+    src{rax, rbx},
+    dst{rax, rbx}
 )
 %agent: CLR(
-    prog[ins.PROG],
-    r{rax, rbx}
-)
-%agent: INC(
     prog[ins.PROG],
     r{rax, rbx}
 )
@@ -33,18 +30,41 @@
     prog[ins.PROG],
     r{rax, rbx}
 )
-%agent: JZ(
+%agent: INC(
     prog[ins.PROG],
-    r{rax, rbx},
-    l{loop1, loop2}
+    r{rax, rbx}
 )
 %agent: JMP(
     prog[ins.PROG],
     l{loop1, loop2}
 )
+%agent: JNZ(
+    prog[ins.PROG],
+    r{rax, rbx},
+    l{loop1, loop2}
+)
+%agent: JZ(
+    prog[ins.PROG],
+    r{rax, rbx},
+    l{loop1, loop2}
+)
+%agent: LBL(
+    prog[ins.PROG],
+    l{loop1, loop2}
+)
+%agent: MOV(
+    prog[ins.PROG],
+    src{rax, rbx},
+    dst{rax, rbx}
+)
+%agent: SWP(
+    prog[ins.PROG],
+    src{rax, rbx},
+    dst{rax, rbx}
+)
 
-'mov'
-    MACHINE(ip[0], state{mov}),
+'move'
+    MACHINE(ip[0], state{next}),
     PROG(cm[0], next[1]),
     PROG(cm[.], prev[1])
 ->
@@ -52,45 +72,48 @@
     PROG(cm[.], next[1]),
     PROG(cm[0], prev[1])
 @ 1
+'reset_units'
+    UNIT(prev[.], next[0], r{#}),
+    UNIT(prev[0], r{#})
+->
+    UNIT(prev[.], next[.], r{_none}),
+    UNIT(prev[.], r{_none})
+@ inf
 'label'
     MACHINE(ip[0], state{run}),
     PROG(cm[0], ins[1]),
     LBL(prog[1])
 ->
-    MACHINE(ip[0], state{mov}),
+    MACHINE(ip[0], state{next}),
     PROG(cm[0], ins[1]),
     LBL(prog[1])
 @ 1
-'inc(rax) | rax != 0'
-    MACHINE(ip[0], state{run}, rax[2]),
-    PROG(cm[0], ins[1]),
-    INC(prog[1], r{rax}),
-    UNIT(prev[2]),
-    UNIT(prev[.], next[.], r{_none})
-->
-    MACHINE(ip[0], state{mov}, rax[2]),
-    PROG(cm[0], ins[1]),
-    INC(prog[1], r{rax}),
-    UNIT(prev[3]),
-    UNIT(prev[2], next[3], r{rax})
-@ 1
-'inc(rax) | rax == 0'
+'clr(rax) | rax == 0'
     MACHINE(ip[0], state{run}, rax[.]),
     PROG(cm[0], ins[1]),
-    INC(prog[1], r{rax}),
-    UNIT(prev[.], next[.], r{_none})
+    CLR(prog[1], r{rax})
 ->
-    MACHINE(ip[0], state{mov}, rax[2]),
+    MACHINE(ip[0], state{next}, rax[.]),
     PROG(cm[0], ins[1]),
-    INC(prog[1], r{rax}),
-    UNIT(prev[2], next[.], r{rax})
+    CLR(prog[1], r{rax})
+@ 1
+'clr(rax) | rax == 1'
+    MACHINE(ip[0], state{run}, rax[2]),
+    PROG(cm[0], ins[1]),
+    CLR(prog[1], r{rax}),
+    UNIT(prev[2], r{rax})
+->
+    MACHINE(ip[0], state{next}, rax[.]),
+    PROG(cm[0], ins[1]),
+    CLR(prog[1], r{rax}),
+    UNIT(prev[.], r{_none})
 @ 1
 'dec(rax) | rax == 0'
     MACHINE(ip[0], state{run}, rax[.]),
     PROG(cm[0], ins[1]),
     DEC(prog[1], r{rax})
 ->
-    MACHINE(ip[0], state{mov}, rax[.]),
+    MACHINE(ip[0], state{next}, rax[.]),
     PROG(cm[0], ins[1]),
     DEC(prog[1], r{rax})
 @ 1
@@ -100,7 +123,7 @@
     DEC(prog[1], r{rax}),
     UNIT(prev[2], next[.], r{rax})
 ->
-    MACHINE(ip[0], state{mov}, rax[.]),
+    MACHINE(ip[0], state{next}, rax[.]),
     PROG(cm[0], ins[1]),
     DEC(prog[1], r{rax}),
     UNIT(prev[.], next[.], r{_none})
@@ -112,84 +135,80 @@
     UNIT(prev[2], next[3], r{rax}),
     UNIT(prev[3])
 ->
-    MACHINE(ip[0], state{mov}, rax[3]),
+    MACHINE(ip[0], state{next}, rax[3]),
     PROG(cm[0], ins[1]),
     DEC(prog[1], r{rax}),
     UNIT(prev[.], next[.], r{_none}),
     UNIT(prev[3])
+@ 1
+'inc(rax) | rax != 0'
+    MACHINE(ip[0], state{run}, rax[2]),
+    PROG(cm[0], ins[1]),
+    INC(prog[1], r{rax}),
+    UNIT(prev[2]),
+    UNIT(prev[.], next[.], r{_none})
+->
+    MACHINE(ip[0], state{next}, rax[2]),
+    PROG(cm[0], ins[1]),
+    INC(prog[1], r{rax}),
+    UNIT(prev[3]),
+    UNIT(prev[2], next[3], r{rax})
+@ 1
+'inc(rax) | rax == 0'
+    MACHINE(ip[0], state{run}, rax[.]),
+    PROG(cm[0], ins[1]),
+    INC(prog[1], r{rax}),
+    UNIT(prev[.], next[.], r{_none})
+->
+    MACHINE(ip[0], state{next}, rax[2]),
+    PROG(cm[0], ins[1]),
+    INC(prog[1], r{rax}),
+    UNIT(prev[2], next[.], r{rax})
+@ 1
+'jnz(rax, *) | rax != 0'
+    MACHINE(ip[0], state{run}, rax[.]),
+    PROG(cm[0], ins[1]),
+    JNZ(prog[1], r{rax})
+->
+    MACHINE(ip[0], state{next}, rax[.]),
+    PROG(cm[0], ins[1]),
+    JNZ(prog[1], r{rax})
 @ 1
 'jz(rax, *) | rax != 0'
     MACHINE(ip[0], state{run}, rax[_]),
     PROG(cm[0], ins[1]),
     JZ(prog[1], r{rax})
 ->
-    MACHINE(ip[0], state{mov}, rax[_]),
+    MACHINE(ip[0], state{next}, rax[_]),
     PROG(cm[0], ins[1]),
     JZ(prog[1], r{rax})
 @ 1
-'clr(rax) | rax == 0'
-    MACHINE(ip[0], state{run}, rax[.]),
-    PROG(cm[0], ins[1]),
-    CLR(prog[1], r{rax})
-->
-    MACHINE(ip[0], state{mov}, rax[.]),
-    PROG(cm[0], ins[1]),
-    CLR(prog[1], r{rax})
-@ 1
-'clr(rax) | rax == 1'
-    MACHINE(ip[0], state{run}, rax[2]),
-    PROG(cm[0], ins[1]),
-    CLR(prog[1], r{rax}),
-    UNIT(prev[2], next[.], r{rax})
-->
-    MACHINE(ip[0], state{mov}, rax[.]),
-    PROG(cm[0], ins[1]),
-    CLR(prog[1], r{rax}),
-    UNIT(prev[.], next[.], r{_none})
-@ 1
-'clr(rax) | rax >= 2'
-    MACHINE(ip[0], state{run}, rax[2]),
-    PROG(cm[0], ins[1]),
-    CLR(prog[1], r{rax}),
-    UNIT(prev[2], next[3], r{rax}),
-    UNIT(prev[3])
-->
-    MACHINE(ip[0], state{run}, rax[3]),
-    PROG(cm[0], ins[1]),
-    CLR(prog[1], r{rax}),
-    UNIT(prev[.], next[.], r{_none}),
-    UNIT(prev[3])
-@ 1
-'inc(rbx) | rbx != 0'
-    MACHINE(ip[0], state{run}, rbx[2]),
-    PROG(cm[0], ins[1]),
-    INC(prog[1], r{rbx}),
-    UNIT(prev[2]),
-    UNIT(prev[.], next[.], r{_none})
-->
-    MACHINE(ip[0], state{mov}, rbx[2]),
-    PROG(cm[0], ins[1]),
-    INC(prog[1], r{rbx}),
-    UNIT(prev[3]),
-    UNIT(prev[2], next[3], r{rbx})
-@ 1
-'inc(rbx) | rbx == 0'
+'clr(rbx) | rbx == 0'
     MACHINE(ip[0], state{run}, rbx[.]),
     PROG(cm[0], ins[1]),
-    INC(prog[1], r{rbx}),
-    UNIT(prev[.], next[.], r{_none})
+    CLR(prog[1], r{rbx})
 ->
-    MACHINE(ip[0], state{mov}, rbx[2]),
+    MACHINE(ip[0], state{next}, rbx[.]),
     PROG(cm[0], ins[1]),
-    INC(prog[1], r{rbx}),
-    UNIT(prev[2], next[.], r{rbx})
+    CLR(prog[1], r{rbx})
+@ 1
+'clr(rbx) | rbx == 1'
+    MACHINE(ip[0], state{run}, rbx[2]),
+    PROG(cm[0], ins[1]),
+    CLR(prog[1], r{rbx}),
+    UNIT(prev[2], r{rbx})
+->
+    MACHINE(ip[0], state{next}, rbx[.]),
+    PROG(cm[0], ins[1]),
+    CLR(prog[1], r{rbx}),
+    UNIT(prev[.], r{_none})
 @ 1
 'dec(rbx) | rbx == 0'
     MACHINE(ip[0], state{run}, rbx[.]),
     PROG(cm[0], ins[1]),
     DEC(prog[1], r{rbx})
 ->
-    MACHINE(ip[0], state{mov}, rbx[.]),
+    MACHINE(ip[0], state{next}, rbx[.]),
     PROG(cm[0], ins[1]),
     DEC(prog[1], r{rbx})
 @ 1
@@ -199,7 +218,7 @@
     DEC(prog[1], r{rbx}),
     UNIT(prev[2], next[.], r{rbx})
 ->
-    MACHINE(ip[0], state{mov}, rbx[.]),
+    MACHINE(ip[0], state{next}, rbx[.]),
     PROG(cm[0], ins[1]),
     DEC(prog[1], r{rbx}),
     UNIT(prev[.], next[.], r{_none})
@@ -211,56 +230,56 @@
     UNIT(prev[2], next[3], r{rbx}),
     UNIT(prev[3])
 ->
-    MACHINE(ip[0], state{mov}, rbx[3]),
+    MACHINE(ip[0], state{next}, rbx[3]),
     PROG(cm[0], ins[1]),
     DEC(prog[1], r{rbx}),
     UNIT(prev[.], next[.], r{_none}),
     UNIT(prev[3])
+@ 1
+'inc(rbx) | rbx != 0'
+    MACHINE(ip[0], state{run}, rbx[2]),
+    PROG(cm[0], ins[1]),
+    INC(prog[1], r{rbx}),
+    UNIT(prev[2]),
+    UNIT(prev[.], next[.], r{_none})
+->
+    MACHINE(ip[0], state{next}, rbx[2]),
+    PROG(cm[0], ins[1]),
+    INC(prog[1], r{rbx}),
+    UNIT(prev[3]),
+    UNIT(prev[2], next[3], r{rbx})
+@ 1
+'inc(rbx) | rbx == 0'
+    MACHINE(ip[0], state{run}, rbx[.]),
+    PROG(cm[0], ins[1]),
+    INC(prog[1], r{rbx}),
+    UNIT(prev[.], next[.], r{_none})
+->
+    MACHINE(ip[0], state{next}, rbx[2]),
+    PROG(cm[0], ins[1]),
+    INC(prog[1], r{rbx}),
+    UNIT(prev[2], next[.], r{rbx})
+@ 1
+'jnz(rbx, *) | rbx != 0'
+    MACHINE(ip[0], state{run}, rbx[.]),
+    PROG(cm[0], ins[1]),
+    JNZ(prog[1], r{rbx})
+->
+    MACHINE(ip[0], state{next}, rbx[.]),
+    PROG(cm[0], ins[1]),
+    JNZ(prog[1], r{rbx})
 @ 1
 'jz(rbx, *) | rbx != 0'
     MACHINE(ip[0], state{run}, rbx[_]),
     PROG(cm[0], ins[1]),
     JZ(prog[1], r{rbx})
 ->
-    MACHINE(ip[0], state{mov}, rbx[_]),
+    MACHINE(ip[0], state{next}, rbx[_]),
     PROG(cm[0], ins[1]),
     JZ(prog[1], r{rbx})
 @ 1
-'clr(rbx) | rbx == 0'
-    MACHINE(ip[0], state{run}, rbx[.]),
-    PROG(cm[0], ins[1]),
-    CLR(prog[1], r{rbx})
-->
-    MACHINE(ip[0], state{mov}, rbx[.]),
-    PROG(cm[0], ins[1]),
-    CLR(prog[1], r{rbx})
-@ 1
-'clr(rbx) | rbx == 1'
-    MACHINE(ip[0], state{run}, rbx[2]),
-    PROG(cm[0], ins[1]),
-    CLR(prog[1], r{rbx}),
-    UNIT(prev[2], next[.], r{rbx})
-->
-    MACHINE(ip[0], state{mov}, rbx[.]),
-    PROG(cm[0], ins[1]),
-    CLR(prog[1], r{rbx}),
-    UNIT(prev[.], next[.], r{_none})
-@ 1
-'clr(rbx) | rbx >= 2'
-    MACHINE(ip[0], state{run}, rbx[2]),
-    PROG(cm[0], ins[1]),
-    CLR(prog[1], r{rbx}),
-    UNIT(prev[2], next[3], r{rbx}),
-    UNIT(prev[3])
-->
-    MACHINE(ip[0], state{run}, rbx[3]),
-    PROG(cm[0], ins[1]),
-    CLR(prog[1], r{rbx}),
-    UNIT(prev[.], next[.], r{_none}),
-    UNIT(prev[3])
-@ 1
 'bind | target == loop1'
-    MACHINE(ip[.], state{jmp}, target{loop1}),
+    MACHINE(ip[.], state{bind}, target{loop1}),
     PROG(cm[.], ins[0]),
     LBL(prog[0], l{loop1})
 ->
@@ -273,12 +292,12 @@
     PROG(cm[0], ins[1]),
     JMP(prog[1], l{loop1})
 ->
-    MACHINE(ip[.], state{jmp}, target{loop1}),
+    MACHINE(ip[.], state{bind}, target{loop1}),
     PROG(cm[.], ins[1]),
     JMP(prog[1], l{loop1})
 @ 1
 'bind | target == loop2'
-    MACHINE(ip[.], state{jmp}, target{loop2}),
+    MACHINE(ip[.], state{bind}, target{loop2}),
     PROG(cm[.], ins[0]),
     LBL(prog[0], l{loop2})
 ->
@@ -291,48 +310,292 @@
     PROG(cm[0], ins[1]),
     JMP(prog[1], l{loop2})
 ->
-    MACHINE(ip[.], state{jmp}, target{loop2}),
+    MACHINE(ip[.], state{bind}, target{loop2}),
     PROG(cm[.], ins[1]),
     JMP(prog[1], l{loop2})
+@ 1
+'jnz(rax, loop1) | rax != 0'
+    MACHINE(ip[0], state{run}, rax[_], target{_none}),
+    PROG(cm[0], ins[1]),
+    JNZ(prog[1], r{rax}, l{loop1})
+->
+    MACHINE(ip[.], state{bind}, rax[_], target{loop1}),
+    PROG(cm[.], ins[1]),
+    JNZ(prog[1], r{rax}, l{loop1})
 @ 1
 'jz(rax, loop1) | rax == 0'
     MACHINE(ip[0], state{run}, rax[.], target{_none}),
     PROG(cm[0], ins[1]),
     JZ(prog[1], r{rax}, l{loop1})
 ->
-    MACHINE(ip[.], state{jmp}, rax[.], target{loop1}),
+    MACHINE(ip[.], state{bind}, rax[.], target{loop1}),
     PROG(cm[.], ins[1]),
     JZ(prog[1], r{rax}, l{loop1})
+@ 1
+'jnz(rbx, loop1) | rbx != 0'
+    MACHINE(ip[0], state{run}, rbx[_], target{_none}),
+    PROG(cm[0], ins[1]),
+    JNZ(prog[1], r{rbx}, l{loop1})
+->
+    MACHINE(ip[.], state{bind}, rbx[_], target{loop1}),
+    PROG(cm[.], ins[1]),
+    JNZ(prog[1], r{rbx}, l{loop1})
 @ 1
 'jz(rbx, loop1) | rbx == 0'
     MACHINE(ip[0], state{run}, rbx[.], target{_none}),
     PROG(cm[0], ins[1]),
     JZ(prog[1], r{rbx}, l{loop1})
 ->
-    MACHINE(ip[.], state{jmp}, rbx[.], target{loop1}),
+    MACHINE(ip[.], state{bind}, rbx[.], target{loop1}),
     PROG(cm[.], ins[1]),
     JZ(prog[1], r{rbx}, l{loop1})
+@ 1
+'jnz(rax, loop2) | rax != 0'
+    MACHINE(ip[0], state{run}, rax[_], target{_none}),
+    PROG(cm[0], ins[1]),
+    JNZ(prog[1], r{rax}, l{loop2})
+->
+    MACHINE(ip[.], state{bind}, rax[_], target{loop2}),
+    PROG(cm[.], ins[1]),
+    JNZ(prog[1], r{rax}, l{loop2})
 @ 1
 'jz(rax, loop2) | rax == 0'
     MACHINE(ip[0], state{run}, rax[.], target{_none}),
     PROG(cm[0], ins[1]),
     JZ(prog[1], r{rax}, l{loop2})
 ->
-    MACHINE(ip[.], state{jmp}, rax[.], target{loop2}),
+    MACHINE(ip[.], state{bind}, rax[.], target{loop2}),
     PROG(cm[.], ins[1]),
     JZ(prog[1], r{rax}, l{loop2})
+@ 1
+'jnz(rbx, loop2) | rbx != 0'
+    MACHINE(ip[0], state{run}, rbx[_], target{_none}),
+    PROG(cm[0], ins[1]),
+    JNZ(prog[1], r{rbx}, l{loop2})
+->
+    MACHINE(ip[.], state{bind}, rbx[_], target{loop2}),
+    PROG(cm[.], ins[1]),
+    JNZ(prog[1], r{rbx}, l{loop2})
 @ 1
 'jz(rbx, loop2) | rbx == 0'
     MACHINE(ip[0], state{run}, rbx[.], target{_none}),
     PROG(cm[0], ins[1]),
     JZ(prog[1], r{rbx}, l{loop2})
 ->
-    MACHINE(ip[.], state{jmp}, rbx[.], target{loop2}),
+    MACHINE(ip[.], state{bind}, rbx[.], target{loop2}),
     PROG(cm[.], ins[1]),
     JZ(prog[1], r{rbx}, l{loop2})
 @ 1
+'relabel_units | rax -> rbx'
+    UNIT(prev[_], next[0], r{rax}),
+    UNIT(prev[0], r{rbx})
+->
+    UNIT(prev[_], next[0], r{rax}),
+    UNIT(prev[0], r{rax})
+@ inf
+'add(rax, rbx) | rax == 0'
+    MACHINE(ip[0], state{run}, rax[.]),
+    PROG(cm[0], ins[1]),
+    ADD(prog[1], src{rax})
+->
+    MACHINE(ip[0], state{next}, rax[.]),
+    PROG(cm[0], ins[1]),
+    ADD(prog[1], src{rax})
+@ 1
+'add(rax, rbx) | rbx == 0'
+    MACHINE(ip[0], state{run}, rax[2], rbx[.]),
+    PROG(cm[0], ins[1]),
+    ADD(prog[1], src{rax}, dst{rbx}),
+    UNIT(prev[2], r{rax})
+->
+    MACHINE(ip[0], state{next}, rax[.], rbx[2]),
+    PROG(cm[0], ins[1]),
+    ADD(prog[1], src{rax}, dst{rbx}),
+    UNIT(prev[2], r{rbx})
+@ 1
+'add(rax, rbx) | rax != 0'
+    MACHINE(ip[0], state{run}, rax[2], rbx[_]),
+    PROG(cm[0], ins[1]),
+    ADD(prog[1], src{rax}, dst{rbx}),
+    UNIT(prev[2], r{rax}),
+    UNIT(next[.], r{rbx})
+->
+    MACHINE(ip[0], state{next}, rax[.], rbx[_]),
+    PROG(cm[0], ins[1]),
+    ADD(prog[1], src{rax}, dst{rbx}),
+    UNIT(prev[2], r{rbx}),
+    UNIT(next[2], r{rbx})
+@ 1
+'mov(rax, rbx) | rax == 0'
+    MACHINE(ip[0], state{run}, rax[.], rbx[#]),
+    PROG(cm[0], ins[1]),
+    MOV(prog[1], src{rax}, dst{rbx})
+->
+    MACHINE(ip[0], state{next}, rax[.], rbx[.]),
+    PROG(cm[0], ins[1]),
+    MOV(prog[1], src{rax}, dst{rbx})
+@ 1
+'mov(rax, rbx) | rax != 0, rbx == 0'
+    MACHINE(ip[0], state{run}, rax[2], rbx[#]),
+    PROG(cm[0], ins[1]),
+    MOV(prog[1], src{rax}, dst{rbx}),
+    UNIT(prev[2], r{rax})
+->
+    MACHINE(ip[0], state{next}, rax[.], rbx[2]),
+    PROG(cm[0], ins[1]),
+    MOV(prog[1], src{rax}, dst{rbx}),
+    UNIT(prev[2], r{rbx})
+@ 1
+'swp(rax, rbx) | rax != 0, rbx != 0'
+    MACHINE(ip[0], state{run}, rax[2], rbx[3]),
+    PROG(cm[0], ins[1]),
+    SWP(prog[1], src{rax}, dst{rbx}),
+    UNIT(prev[2], r{rax}),
+    UNIT(prev[3], r{rbx})
+->
+    MACHINE(ip[0], state{next}, rax[3], rbx[2]),
+    PROG(cm[0], ins[1]),
+    SWP(prog[1], src{rax}, dst{rbx}),
+    UNIT(prev[2], r{rbx}),
+    UNIT(prev[3], r{rax})
+@ 1
+'swp(rax, rbx) | rbx == 0'
+    MACHINE(ip[0], state{run}, rax[2], rbx[.]),
+    PROG(cm[0], ins[1]),
+    SWP(prog[1], src{rax}, dst{rbx}),
+    UNIT(prev[2], r{rax})
+->
+    MACHINE(ip[0], state{next}, rax[.], rbx[2]),
+    PROG(cm[0], ins[1]),
+    SWP(prog[1], src{rax}, dst{rbx}),
+    UNIT(prev[2], r{rbx})
+@ 1
+'swp(rax, rbx) | rax == 0, rbx != 0'
+    MACHINE(ip[0], state{run}, rax[.], rbx[2]),
+    PROG(cm[0], ins[1]),
+    SWP(prog[1], src{rax}, dst{rbx}),
+    UNIT(prev[2], r{rbx})
+->
+    MACHINE(ip[0], state{next}, rax[2], rbx[.]),
+    PROG(cm[0], ins[1]),
+    SWP(prog[1], src{rax}, dst{rbx}),
+    UNIT(prev[2], r{rax})
+@ 1
+'swp(rax, rbx) | rax == rbx == 0'
+    MACHINE(ip[0], state{run}, rax[.], rbx[.]),
+    PROG(cm[0], ins[1]),
+    SWP(prog[1], src{rax}, dst{rbx})
+->
+    MACHINE(ip[0], state{next}, rax[.], rbx[.]),
+    PROG(cm[0], ins[1]),
+    SWP(prog[1], src{rax}, dst{rbx})
+@ 1
+'relabel_units | rbx -> rax'
+    UNIT(prev[_], next[0], r{rbx}),
+    UNIT(prev[0], r{rax})
+->
+    UNIT(prev[_], next[0], r{rbx}),
+    UNIT(prev[0], r{rbx})
+@ inf
+'add(rbx, rax) | rbx == 0'
+    MACHINE(ip[0], state{run}, rbx[.]),
+    PROG(cm[0], ins[1]),
+    ADD(prog[1], src{rbx})
+->
+    MACHINE(ip[0], state{next}, rbx[.]),
+    PROG(cm[0], ins[1]),
+    ADD(prog[1], src{rbx})
+@ 1
+'add(rbx, rax) | rax == 0'
+    MACHINE(ip[0], state{run}, rbx[2], rax[.]),
+    PROG(cm[0], ins[1]),
+    ADD(prog[1], src{rbx}, dst{rax}),
+    UNIT(prev[2], r{rbx})
+->
+    MACHINE(ip[0], state{next}, rbx[.], rax[2]),
+    PROG(cm[0], ins[1]),
+    ADD(prog[1], src{rbx}, dst{rax}),
+    UNIT(prev[2], r{rax})
+@ 1
+'add(rbx, rax) | rbx != 0'
+    MACHINE(ip[0], state{run}, rbx[2], rax[_]),
+    PROG(cm[0], ins[1]),
+    ADD(prog[1], src{rbx}, dst{rax}),
+    UNIT(prev[2], r{rbx}),
+    UNIT(next[.], r{rax})
+->
+    MACHINE(ip[0], state{next}, rbx[.], rax[_]),
+    PROG(cm[0], ins[1]),
+    ADD(prog[1], src{rbx}, dst{rax}),
+    UNIT(prev[2], r{rax}),
+    UNIT(next[2], r{rax})
+@ 1
+'mov(rbx, rax) | rbx == 0'
+    MACHINE(ip[0], state{run}, rbx[.], rax[#]),
+    PROG(cm[0], ins[1]),
+    MOV(prog[1], src{rbx}, dst{rax})
+->
+    MACHINE(ip[0], state{next}, rbx[.], rax[.]),
+    PROG(cm[0], ins[1]),
+    MOV(prog[1], src{rbx}, dst{rax})
+@ 1
+'mov(rbx, rax) | rbx != 0, rax == 0'
+    MACHINE(ip[0], state{run}, rbx[2], rax[#]),
+    PROG(cm[0], ins[1]),
+    MOV(prog[1], src{rbx}, dst{rax}),
+    UNIT(prev[2], r{rbx})
+->
+    MACHINE(ip[0], state{next}, rbx[.], rax[2]),
+    PROG(cm[0], ins[1]),
+    MOV(prog[1], src{rbx}, dst{rax}),
+    UNIT(prev[2], r{rax})
+@ 1
+'swp(rbx, rax) | rbx != 0, rax != 0'
+    MACHINE(ip[0], state{run}, rbx[2], rax[3]),
+    PROG(cm[0], ins[1]),
+    SWP(prog[1], src{rbx}, dst{rax}),
+    UNIT(prev[2], r{rbx}),
+    UNIT(prev[3], r{rax})
+->
+    MACHINE(ip[0], state{next}, rbx[3], rax[2]),
+    PROG(cm[0], ins[1]),
+    SWP(prog[1], src{rbx}, dst{rax}),
+    UNIT(prev[2], r{rax}),
+    UNIT(prev[3], r{rbx})
+@ 1
+'swp(rbx, rax) | rax == 0'
+    MACHINE(ip[0], state{run}, rbx[2], rax[.]),
+    PROG(cm[0], ins[1]),
+    SWP(prog[1], src{rbx}, dst{rax}),
+    UNIT(prev[2], r{rbx})
+->
+    MACHINE(ip[0], state{next}, rbx[.], rax[2]),
+    PROG(cm[0], ins[1]),
+    SWP(prog[1], src{rbx}, dst{rax}),
+    UNIT(prev[2], r{rax})
+@ 1
+'swp(rbx, rax) | rbx == 0, rax != 0'
+    MACHINE(ip[0], state{run}, rbx[.], rax[2]),
+    PROG(cm[0], ins[1]),
+    SWP(prog[1], src{rbx}, dst{rax}),
+    UNIT(prev[2], r{rax})
+->
+    MACHINE(ip[0], state{next}, rbx[2], rax[.]),
+    PROG(cm[0], ins[1]),
+    SWP(prog[1], src{rbx}, dst{rax}),
+    UNIT(prev[2], r{rbx})
+@ 1
+'swp(rbx, rax) | rbx == rax == 0'
+    MACHINE(ip[0], state{run}, rbx[.], rax[.]),
+    PROG(cm[0], ins[1]),
+    SWP(prog[1], src{rbx}, dst{rax})
+->
+    MACHINE(ip[0], state{next}, rbx[.], rax[.]),
+    PROG(cm[0], ins[1]),
+    SWP(prog[1], src{rbx}, dst{rax})
+@ 1
 
-%init: 100 UNIT(
+%init: 10000 UNIT(
     prev[.],
     next[.],
     r{_none}
