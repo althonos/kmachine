@@ -5,11 +5,11 @@ pub struct File {
 
 /// Any declaration in a Kappa input file.
 pub enum Declaration {
-    // Rule(Rule),
+    Rule(Rule),
     Var(Variable),
     Sig(Signature),
-    // Token(Token),
-    // Init(Initial),
+    Token(Token),
+    Init(Initial),
     Plot(Plot),
     Obs(Observable),
     // Inter(Intervention),
@@ -240,7 +240,7 @@ pub enum BoolExpr {
 pub enum AlgExpr {
     Float(f64),
     Constant(AlgConstant),
-    Variable(Name),
+    Variable(Label),
     Reserved(AlgReserved),
     Binary(Box<AlgExpr>, OpBin, Box<AlgExpr>),
     Unary(OpUn, Box<AlgExpr>),
@@ -282,6 +282,13 @@ pub struct SigState {
 
 pub struct SigBinding {
     stub: Stub,
+}
+
+// --- Section 2.4.3: Initial conditions -------------------------------------
+
+pub enum Initial {
+    Mixture(AlgExpr, Pattern),
+    Token(AlgExpr, Token),
 }
 
 // --- Section 2.4.5: Tokens -------------------------------------------------
