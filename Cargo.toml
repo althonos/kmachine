@@ -3,7 +3,7 @@ name        = "kmachine"
 version     = "0.1.0"
 authors     = ["Martin Larralde <martin.larralde@ens-paris-saclay.fr>"]
 license     = "MIT"
-description = "A toy compiler that produces Kappa code from counter machine instructions." 
+description = "A toy compiler that produces Kappa code from counter machine instructions."
 repository  = "https://github.com/althonos/kmachine"
 readme      = "README.md"
 keywords    = ["kappa", "biology", "compiler", "counter machine", "Turing machine", "program machine"]
@@ -18,4 +18,4 @@ path = "./attasm"
 path = "./kappa"
 
 [workspace]
-members = ["attasm", "kappa"]
+members = ["attasm", "kappa", "kappa-ast"]
