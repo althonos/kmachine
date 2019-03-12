@@ -284,6 +284,8 @@ pub struct SigBinding {
     stub: Stub,
 }
 
+// --- Section 2.4.4: Parameters ---------------------------------------------
+
 // --- Section 2.4.3: Initial conditions -------------------------------------
 
 pub enum Initial {
@@ -295,4 +297,33 @@ pub enum Initial {
 
 pub struct Token {
     name: Name,
+}
+
+// --- Section 2.5: Intervention directives ----------------------------------
+
+pub enum StringExpr {
+    Alg(Box<AlgExpr>),
+    String(String),
+    Concat(Box<StringExpr>, Box<StringExpr>),
+}
+
+pub struct Intervention {
+    alarm: Option<f64>,
+    test: Option<BoolExpr>,
+    effects: Vec<Effect>,
+    repeat: Option<BoolExpr>,
+}
+
+pub enum Effect {
+    Add(AlgExpr, Pattern),
+    Del(AlgExpr, Pattern),
+    Assign(Name, AlgExpr),
+    Snapshot(StringExpr),
+    Stop(StringExpr),
+    Din(StringExpr, bool),
+    Track(Label, bool),
+    Update(Name, AlgExpr),
+    PlotEntry,
+    Print(StringExpr, StringExpr),
+    SpeciesOff(StringExpr, Pattern, bool),
 }
